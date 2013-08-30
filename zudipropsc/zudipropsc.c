@@ -226,6 +226,7 @@ static int readFileList(char **argv, FILE *iFile)
 int main(int argc, char **argv)
 {
 	FILE		*iFile;
+	int		ret;
 
 	if (argc < 3) { printAndExit(argv[0], usageMessage, 1); };
 	if (strcmp(argv[1], "-k") != 0 && strcmp(argv[1], "-u") != 0) {
@@ -246,6 +247,9 @@ int main(int argc, char **argv)
 	iFile = fopen(argv[2], "r");
 	if (iFile == NULL) { printAndExit(argv[0], "Invalid input file.", 2); };
 
-	exit(readFileList(argv, iFile));
+	ret = readFileList(argv, iFile);
+
+	fclose(iFile);
+	exit(ret);
 }
 

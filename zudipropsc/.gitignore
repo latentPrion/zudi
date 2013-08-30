@@ -1,5 +1,7 @@
 list
-udiprops.txt
+*.udiprops
 zudipropsc
 *.o
+*.udid-index
+*.udim-index
 
