@@ -61,7 +61,6 @@ static int kernelModeParse(FILE *propsFile, char *propsLineBuff)
 {
 	int		logicalLineNo, lineSegmentLength, buffIndex,
 			isMultiline, lineLength;
-	size_t		propsSize;
 	char		*comment;
 
 	/**	EXPLANATION:
@@ -70,12 +69,6 @@ static int kernelModeParse(FILE *propsFile, char *propsLineBuff)
 	 * the list. Parse the data in the file, add it to the index, and
 	 * return.
 	 **/
-	// Get size of the udiprops file.
-	fseek(propsFile, 0, SEEK_END);
-	propsSize = ftell(propsFile);
-	fseek(propsFile, 0, SEEK_SET);
-	printf("Props size %u.\n", (unsigned)propsSize);
-
 	/* Now loop, getting lines and pass them to the parser. Since the parser
 	 * expects only fully stripped lines, we strip lines in here before
 	 * passing them to the parser.
