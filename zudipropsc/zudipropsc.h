@@ -35,6 +35,7 @@ struct zudiIndexDeviceS
 {
 	uint16_t	id, driverId;
 	uint16_t	deviceNameIndex, metaIndex;
+	uint8_t		nAttributes;
 	struct
 	{
 		enum zudiIndexDeviceAttrTypeE	type;
