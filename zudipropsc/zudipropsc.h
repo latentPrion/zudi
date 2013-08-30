@@ -1,6 +1,7 @@
 #ifndef _Z_UDIPROPS_COMPILER_H
 	#define _Z_UDIPROPS_COMPILER_H
 
+	#include <stdint.h>
 	#include <stdio.h>
 	#include <stdlib.h>
 
@@ -12,6 +13,119 @@ inline static void printAndExit(char *progname, const char *msg, int errcode)
 	printf("%s: %s.\n", progname, msg);
 	exit(errcode);
 }
+
+/**	EXPLANATION:
+ * This header is contained in all UDI index files. The kernel uses it to
+ * quickly gain information about the whole of the index at a glance. Versioning
+ * of the struct layouts used is also included for forward expansion.
+ **/
+struct zudiIndexHeaderS
+{
+	// Version of the record format used in this index file.
+	uint16_t	majorVersion, minorVersion;
+	uint16_t	nRecords;
+	uint8_t		reserved[128];
+};
+
+enum zudiIndexDeviceAttrTypeE {
+	ZUDI_INDEX_DEVATTR_STRING=0, ZUDI_INDEX_DEVATTR_UBIT32,
+	ZUDI_INDEX_DEVATTR_BOOL, ZUDI_INDEX_DEVATTR_ARRAY };
+
+struct zudiIndexDeviceS
+{
+	uint16_t	id, driverId;
+	uint16_t	deviceNameIndex, metaIndex;
+	struct
+	{
+		enum zudiIndexDeviceAttrTypeE	type;
+		char				name[32], value[64];
+	} attributes[16];
+};
+
+enum zudiIndexDriverRegionPrioE	{
+	ZUDI_INDEX_REGIONPRIO_LOW=0, ZUDI_INDEX_REGIONPRIO_MEDIUM,
+	ZUDI_INDEX_REGIONPRIO_HIGH };
+
+enum zudiIndexDriverRegionLatencyE {
+	ZUDI_INDEX_REGIONLAT_NON_CRITICAL=0, ZUDI_INDEX_REGIONLAT_NON_OVER,
+	ZUDI_INDEX_REGIONLAT_RETRY, ZUDI_INDEX_REGIONLAT_OVER,
+	ZUDI_INDEX_REGIONLAT_POWERFAIL_WARN };
+
+struct zudiIndexDriverS
+{
+	// TODO: Add support for custom attributes.
+	uint16_t	id;
+	uint32_t	nameIndex, supplierIndex, contactIndex;
+	char		name[16];
+	uint32_t	releaseNo;
+	char		releaseString[64];
+	char		requires[16][16];
+
+	struct
+	{
+		uint16_t	index;
+		char		*name;
+	} metalanguages[16];
+
+	struct
+	{
+		uint16_t	index, regionIndex, opsIndex;
+	} childBindOps[16];
+
+	struct
+	{
+		uint16_t	index, regionIndex, opsIndex, bindCbIndex;
+	} parentBindOps[16];
+
+	struct
+	{
+		uint16_t	index, regionIndex,
+				opsIndex0, opsIndex1, bindCbIndex;
+	} internalBindOps[16];
+
+	struct
+	{
+		uint16_t	index;
+		char		fileName[64];
+	} modules[4];
+
+	struct
+	{
+		char		fileName[64];
+	} readableFiles[8];
+
+	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_FP	(1<<0)
+	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_DYNAMIC	(1<<1)
+	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_INTERRUPT	(1<<1)
+	struct
+	{
+		uint16_t	index;
+		enum zudiIndexDriverRegionPrioE		priority;
+		enum zudiIndexDriverRegionLatencyE	latency;
+		uint32_t	flags;
+	} regions[16];
+
+};
+
+
+struct udiIndexMessageS
+{
+	uint16_t	id, driverId;
+	char		message[128];
+};
+
+struct udiIndexDisasterMessageS
+{
+	uint16_t	id, driverId;
+	char		message[128];
+};
+
+struct udiIndexMessageFileS
+{
+	uint16_t	id, driverId;
+	char		fileName[128];
+};
+
 
 #endif
 
