@@ -43,15 +43,6 @@ struct zudiIndexDeviceS
 	} attributes[16];
 };
 
-enum zudiIndexDriverRegionPrioE	{
-	ZUDI_INDEX_REGIONPRIO_LOW=0, ZUDI_INDEX_REGIONPRIO_MEDIUM,
-	ZUDI_INDEX_REGIONPRIO_HIGH };
-
-enum zudiIndexDriverRegionLatencyE {
-	ZUDI_INDEX_REGIONLAT_NON_CRITICAL=0, ZUDI_INDEX_REGIONLAT_NON_OVER,
-	ZUDI_INDEX_REGIONLAT_RETRY, ZUDI_INDEX_REGIONLAT_OVER,
-	ZUDI_INDEX_REGIONLAT_POWERFAIL_WARN };
-
 struct zudiIndexDriverS
 {
 	// TODO: Add support for custom attributes.
@@ -63,12 +54,13 @@ struct zudiIndexDriverS
 	char		requires[10][16];
 
 	uint8_t		nMetalanguages, nChildBindOps, nParentBindOps,
-			nInternalBindOps, nModules, nReadableFiles, nRegions;
+			nInternalBindOps, nModules, nReadableFiles, nRegions,
+			nMessages, nDisasterMessages, nMessageFiles;
 
 	struct
 	{
 		uint16_t	index;
-		char		*name;
+		char		name[16];
 	} metalanguages[12];
 
 	struct
@@ -98,16 +90,26 @@ struct zudiIndexDriverS
 		char		fileName[64];
 	} readableFiles[8];
 
-	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_FP	(1<<0)
-	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_DYNAMIC	(1<<1)
-	#define	ZUDI_DRIVERINDEX_REGION_FLAGS_INTERRUPT	(1<<1)
-	struct
-	{
-		uint16_t	index;
-		enum zudiIndexDriverRegionPrioE		priority;
-		enum zudiIndexDriverRegionLatencyE	latency;
-		uint32_t	flags;
-	} regions[16];
+};
+
+enum zudiIndexRegionPrioE	{
+	ZUDI_INDEX_REGIONPRIO_LOW=0, ZUDI_INDEX_REGIONPRIO_MEDIUM,
+	ZUDI_INDEX_REGIONPRIO_HIGH };
+
+enum zudiIndexRegionLatencyE {
+	ZUDI_INDEX_REGIONLAT_NON_CRITICAL=0, ZUDI_INDEX_REGIONLAT_NON_OVER,
+	ZUDI_INDEX_REGIONLAT_RETRY, ZUDI_INDEX_REGIONLAT_OVER,
+	ZUDI_INDEX_REGIONLAT_POWERFAIL_WARN };
+
+#define	ZUDI_REGIONINDEX_FLAGS_FP		(1<<0)
+#define	ZUDI_REGIONINDEX_FLAGS_DYNAMIC		(1<<1)
+#define	ZUDI_REGIONINDEX_FLAGS_INTERRUPT	(1<<1)
+struct zudiIndexRegionS
+{
+	uint16_t	id, driverId, index, moduleIndex;
+	enum zudiIndexRegionPrioE	priority;
+	enum zudiIndexRegionLatencyE	latency;
+	uint32_t	flags;
 };
 
 struct zudiIndexMessageS

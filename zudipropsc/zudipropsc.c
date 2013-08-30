@@ -255,10 +255,12 @@ int main(int argc, char **argv)
 		"\tindex header %d.\n"
 		"\tdevice record %d.\n"
 		"\tdriver record %d.\n"
+		"\tregion record %d.\n"
 		"\tmessage record %d.\n",
 		sizeof(struct zudiIndexHeaderS),
 		sizeof(struct zudiIndexDeviceS),
 		sizeof(struct zudiIndexDriverS),
+		sizeof(struct zudiIndexRegionS),
 		sizeof(struct zudiIndexMessageS));
 
 	exit(ret);
