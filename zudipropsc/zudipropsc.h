@@ -59,23 +59,26 @@ struct zudiIndexDriverS
 	char		name[16];
 	uint32_t	releaseNo;
 	char		releaseString[64];
-	char		requires[16][16];
+	char		requires[10][16];
+
+	uint8_t		nMetalanguages, nChildBindOps, nParentBindOps,
+			nInternalBindOps, nModules, nReadableFiles, nRegions;
 
 	struct
 	{
 		uint16_t	index;
 		char		*name;
-	} metalanguages[16];
+	} metalanguages[12];
 
 	struct
 	{
 		uint16_t	index, regionIndex, opsIndex;
-	} childBindOps[16];
+	} childBindOps[12];
 
 	struct
 	{
 		uint16_t	index, regionIndex, opsIndex, bindCbIndex;
-	} parentBindOps[16];
+	} parentBindOps[4];
 
 	struct
 	{
@@ -104,23 +107,21 @@ struct zudiIndexDriverS
 		enum zudiIndexDriverRegionLatencyE	latency;
 		uint32_t	flags;
 	} regions[16];
-
 };
 
-
-struct udiIndexMessageS
+struct zudiIndexMessageS
 {
 	uint16_t	id, driverId;
 	char		message[128];
 };
 
-struct udiIndexDisasterMessageS
+struct zudiIndexDisasterMessageS
 {
 	uint16_t	id, driverId;
 	char		message[128];
 };
 
-struct udiIndexMessageFileS
+struct zudiIndexMessageFileS
 {
 	uint16_t	id, driverId;
 	char		fileName[128];

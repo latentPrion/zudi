@@ -250,6 +250,17 @@ int main(int argc, char **argv)
 	ret = readFileList(argv, iFile);
 
 	fclose(iFile);
+
+	printf("Sizes of the types:\n"
+		"\tindex header %d.\n"
+		"\tdevice record %d.\n"
+		"\tdriver record %d.\n"
+		"\tmessage record %d.\n",
+		sizeof(struct zudiIndexHeaderS),
+		sizeof(struct zudiIndexDeviceS),
+		sizeof(struct zudiIndexDriverS),
+		sizeof(struct zudiIndexMessageS));
+
 	exit(ret);
 }
 
