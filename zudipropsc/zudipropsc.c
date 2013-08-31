@@ -37,6 +37,7 @@
 static const char *usageMessage = "Usage:\n\tzudipropsc -<a|l|r> <file> "
 					"[-txt|bin] "
 					" [-i <index-dir>] [-b <base-path>]";
+
 enum parseModeE		parseMode=PARSE_NONE;
 enum programModeE	programMode=MODE_NONE;
 char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
@@ -64,7 +65,7 @@ static void parseCommandLine(int argc, char **argv)
 
 	actionArgIndex = i;
 
-	/* Now get the parse mode. Only matters 
+	/* Now get the parse mode. Only matters in ADD mode.
 	 **/
 	if (programMode == MODE_ADD)
 	{
@@ -223,12 +224,6 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 			};
 		}
 		while (isMultiline);
-
-		/**	FIXME:
-		 * There seems to be a bug in libc's fgets() which causes it to
-		 * return the last line in a file twice if the second-to-last
-		 * line ends with '\'. Look into this.
-		 **/
 
 		// Don't waste time calling the parser on 0 length lines.
 		if (lineLength < 2) { continue; };
