@@ -1,5 +1,4 @@
 
-#include <unistd.h>
 #include <limits.h>
 #include <string.h>
 #include <stdint.h>
@@ -35,12 +34,107 @@
  **/
 #define UDIPROPS_LINE_MAXLEN		(512)
 
-static const char *usageMessage = "Usage:\n\tzudipropsc -[k|u] <file>.";
-enum programModeE	programMode;
-int			path_max;
-char			*lineBuff, propsLineBuff[515];
+static const char *usageMessage = "Usage:\n\tzudipropsc -<a|l|r> <file> "
+					"[-txt|bin] "
+					" [-i <index-dir>] [-b <base-path>]";
+enum parseModeE		parseMode=PARSE_NONE;
+enum programModeE	programMode=MODE_NONE;
+char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
+char			propsLineBuffMem[515];
 
-static int userModeParse(FILE *propsFile, char *propsLineBuff)
+static void parseCommandLine(int argc, char **argv)
+{
+	int		i, actionArgIndex,
+			basePathArgIndex=-1, indexPathArgIndex=-1;
+
+	if (argc < 3) { printAndExit(argv[0], usageMessage, 1); };
+
+	// First find out the action we are to carry out.
+	for (i=1; i<argc; i++)
+	{
+		if (!strcmp(argv[i], "-a"))
+			{ programMode = MODE_ADD; break; };
+
+		if (!strcmp(argv[i], "-l"))
+			{ programMode = MODE_LIST; break; };
+
+		if (!strcmp(argv[i], "-r"))
+			{ programMode = MODE_REMOVE; break; };
+	};
+
+	actionArgIndex = i;
+
+	/* Now get the parse mode. Only matters 
+	 **/
+	if (programMode == MODE_ADD)
+	{
+		for (i=0; i<argc; i++)
+		{
+			if (!strcmp(argv[i], "-txt"))
+				{ parseMode = PARSE_TEXT; break; };
+
+			if (!strcmp(argv[i], "-bin"))
+				{ parseMode = PARSE_BINARY; break; };
+		};
+
+		// If the parse mode wasn't specified:
+		if (parseMode == PARSE_NONE)
+		{
+			printAndExit(
+				argv[0],
+				"Input file format [-txt|bin] must be included "
+				"when adding new drivers",
+				1);
+		};
+	};
+
+	/* If no mode was detected or if the index of the action switch was
+	 * invalid (that is, it overflows "argc"), we exit the program.
+	 **/
+	if (programMode == MODE_NONE || actionArgIndex + 1 >= argc)
+		{ printAndExit(argv[0], usageMessage, 1); };
+
+	inputFileName = argv[actionArgIndex + 1];
+
+	if (programMode == MODE_LIST)
+	{
+		// In list mode, no more than 3 arguments are valid.
+		if (argc > 3) { printAndExit(argv[0], usageMessage, 1); };
+		// Return early because the rest of the parsing is unnecessary.
+		return;
+	};
+
+	for (i=1; i<argc; i++)
+	{
+		if (!strcmp(argv[i], "-i") || !strcmp(argv[i], "--indexpath"))
+			{ indexPathArgIndex = i; continue; };
+
+		if (!strcmp(argv[i], "-b") || !strcmp(argv[i], "--basepath"))
+			{ basePathArgIndex = i; continue; };
+	};
+
+	/* Ensure that the index for the index-path or base-path arguments isn't
+	 * beyond the bounds of the number of arguments we actually got.
+	 **/
+	if (indexPathArgIndex + 1 >= argc || basePathArgIndex + 1 >= argc)
+		{ printAndExit(argv[0], usageMessage, 1); };
+
+	// If no index path was explicitly provided, assume a default path.
+	if (indexPathArgIndex == -1) { indexPath = "@h:zambesii/drivers"; }
+	else { indexPath = argv[indexPathArgIndex + 1]; };
+
+	if (basePathArgIndex == -1 && programMode == MODE_ADD)
+	{
+		printAndExit(
+			argv[0],
+			"Base path must be provided when adding new drivers",
+			1);
+	};
+
+	if (basePathArgIndex != -1) { basePath = argv[basePathArgIndex + 1]; };
+}
+
+static int binaryParse(FILE *propsFile, char *propsLineBuff)
 {
 	(void) propsFile;
 	(void) propsLineBuff;
@@ -57,7 +151,7 @@ static int userModeParse(FILE *propsFile, char *propsLineBuff)
 	return EXIT_SUCCESS;
 }
 
-static int kernelModeParse(FILE *propsFile, char *propsLineBuff)
+static int textParse(FILE *propsFile, char *propsLineBuff)
 {
 	int		logicalLineNo, lineSegmentLength, buffIndex,
 			isMultiline, lineLength;
@@ -104,8 +198,13 @@ static int kernelModeParse(FILE *propsFile, char *propsLineBuff)
 				lineSegmentLength = strlen(
 					&propsLineBuff[buffIndex]);
 
-				// Consume the trailing newline.
+				// Consume the trailing EOL (including \r).
 				lineSegmentLength--;
+				if (propsLineBuff[
+					buffIndex+lineSegmentLength-1] == '\r')
+				{
+					lineSegmentLength--;
+				};
 			};
 
 			// TODO: Check for lines that are too long.
@@ -139,6 +238,47 @@ static int kernelModeParse(FILE *propsFile, char *propsLineBuff)
 	return EXIT_SUCCESS;
 }
 
+int main(int argc, char **argv)
+{
+	FILE		*iFile;
+	int		ret;
+
+	parseCommandLine(argc, argv);
+	if (programMode != MODE_ADD) {
+		printAndExit(argv[0], "Only ADD mode is supported for now", 2);
+	};
+
+	// Try to open up the input file.
+	iFile = fopen(
+		inputFileName,
+		((parseMode == PARSE_TEXT) ? "r" : "rb"));
+
+	if (iFile == NULL) { printAndExit(argv[0], "Invalid input file", 2); };
+
+	if (parseMode == PARSE_TEXT) {
+		ret = textParse(iFile, propsLineBuffMem);
+	} else {
+		ret = binaryParse(iFile, propsLineBuffMem);
+	};
+
+	fclose(iFile);
+
+	printf("Sizes of the types:\n"
+		"\tindex header %zi.\n"
+		"\tdevice record %zi.\n"
+		"\tdriver record %zi.\n"
+		"\tregion record %zi.\n"
+		"\tmessage record %zi.\n",
+		sizeof(struct zudiIndexHeaderS),
+		sizeof(struct zudiIndexDeviceS),
+		sizeof(struct zudiIndexDriverS),
+		sizeof(struct zudiIndexRegionS),
+		sizeof(struct zudiIndexMessageS));
+
+	exit(ret);
+}
+
+#if 0
 static int readFileList(char **argv, FILE *iFile)
 {
 	int		iFileLineNo, lineLength;
@@ -211,7 +351,7 @@ static int readFileList(char **argv, FILE *iFile)
 		};
 
 		// Begin parsing.
-		if (programMode == KERNEL) {
+		if (parseMode == PARSE_TEXT) {
 			kernelModeParse(propsFile, propsLineBuff);
 		} else {
 			userModeParse(propsFile, propsLineBuff);
@@ -222,47 +362,5 @@ static int readFileList(char **argv, FILE *iFile)
 
 	return EXIT_SUCCESS;
 }
-
-int main(int argc, char **argv)
-{
-	FILE		*iFile;
-	int		ret;
-
-	if (argc < 3) { printAndExit(argv[0], usageMessage, 1); };
-	if (strcmp(argv[1], "-k") != 0 && strcmp(argv[1], "-u") != 0) {
-		printAndExit(argv[0], usageMessage, 1);
-	};
-
-	// Determine which parse mode we're going to be using.
-	programMode = (strcmp(argv[1], "-k") == 0) ? KERNEL : USER;
-
-	// Get the platform's max path length.
-	path_max = pathconf("/", _PC_PATH_MAX);
-	if (path_max == -1) { path_max = 256; };
-
-	lineBuff = malloc(path_max);
-	if (lineBuff == NULL) { printAndExit(argv[0], "No memory.", 3); };
-
-	// Try to open up the input file.
-	iFile = fopen(argv[2], "r");
-	if (iFile == NULL) { printAndExit(argv[0], "Invalid input file.", 2); };
-
-	ret = readFileList(argv, iFile);
-
-	fclose(iFile);
-
-	printf("Sizes of the types:\n"
-		"\tindex header %d.\n"
-		"\tdevice record %d.\n"
-		"\tdriver record %d.\n"
-		"\tregion record %d.\n"
-		"\tmessage record %d.\n",
-		sizeof(struct zudiIndexHeaderS),
-		sizeof(struct zudiIndexDeviceS),
-		sizeof(struct zudiIndexDriverS),
-		sizeof(struct zudiIndexRegionS),
-		sizeof(struct zudiIndexMessageS));
-
-	exit(ret);
-}
+#endif
 
