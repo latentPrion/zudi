@@ -6,7 +6,9 @@
 	#include "zudiIndex.h"
 
 enum parseModeE { PARSE_NONE, PARSE_TEXT, PARSE_BINARY };
-enum programModeE { MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE };
+enum programModeE { 
+	MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE, MODE_PRINT_SIZES };
+
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
 
@@ -17,8 +19,10 @@ inline static void printAndExit(char *progname, const char *msg, int errcode)
 }
 
 enum parser_lineTypeE {
-	LT_UNKNOWN=0, LT_DRIVER, LT_MODULE, LT_REGION, LT_DEVICE, LT_MESSAGE,
-	LT_DISASTER_MESSAGE, LT_MESSAGE_FILE };
+	LT_UNKNOWN=0, LT_INVALID, LT_MISC, LT_DRIVER, LT_MODULE, LT_REGION,
+	LT_DEVICE, LT_MESSAGE, LT_DISASTER_MESSAGE, LT_MESSAGE_FILE,
+	LT_CHILD_BIND_OPS, LT_INTERNAL_BIND_OPS, LT_PARENT_BIND_OPS,
+	LT_METALANGUAGE, LT_READABLE_FILE };
 
 int parser_initializeNewDriverState(uint16_t driverId);
 struct zudiIndexDriverS *parser_getCurrentDriverState(void);

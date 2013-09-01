@@ -37,9 +37,9 @@ struct zudiIndexDriverS
 	// TODO: Add support for custom attributes.
 	uint16_t	id;
 	uint32_t	nameIndex, supplierIndex, contactIndex;
-	char		name[16];
-	uint32_t	releaseNo;
-	char		releaseString[64];
+	char		shortName[16];
+	char		releaseString[16];
+	char		releaseStringIndex;
 	char		requires[10][16];
 
 	uint8_t		nMetalanguages, nChildBindOps, nParentBindOps,
@@ -114,6 +114,12 @@ struct zudiIndexDisasterMessageS
 };
 
 struct zudiIndexMessageFileS
+{
+	uint16_t	driverId;
+	char		fileName[128];
+};
+
+struct zudiIndexReadableFileS
 {
 	uint16_t	id, driverId;
 	char		fileName[128];

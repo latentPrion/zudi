@@ -35,8 +35,10 @@
 #define UDIPROPS_LINE_MAXLEN		(512)
 
 static const char *usageMessage = "Usage:\n\tzudipropsc -<a|l|r> <file> "
-					"[-txt|bin] "
-					" [-i <index-dir>] [-b <base-path>]";
+					"[-txt|-bin] "
+					" [-i <index-dir>] [-b <base-path>]\n"
+					"Note: For --printsizes, include one "
+					"or more dummy arguments";
 
 enum parseModeE		parseMode=PARSE_NONE;
 enum programModeE	programMode=MODE_NONE;
@@ -53,6 +55,10 @@ static void parseCommandLine(int argc, char **argv)
 	// First find out the action we are to carry out.
 	for (i=1; i<argc; i++)
 	{
+		// No further comm. line processing necessary here.
+		if (!strcmp(argv[i], "--printsizes"))
+			{ programMode = MODE_PRINT_SIZES; return; };
+
 		if (!strcmp(argv[i], "-a"))
 			{ programMode = MODE_ADD; break; };
 
@@ -152,11 +158,20 @@ static int binaryParse(FILE *propsFile, char *propsLineBuff)
 	return EXIT_SUCCESS;
 }
 
+char		*lineTypeStrings[] =
+{
+	"UNKNOWN", "INVALID", "MISC", "DRIVER", "MODULE", "REGION", "DEVICE", "MESSAGE",
+	"DISASTER_MESSAGE", "MESSAGE_FILE", "CHILD_BIND_OPS",
+	"INTERNAL_BIND_OPS", "PARENT_BIND_OPS", "METALANGUAGE", "READABLE_FILE"
+};
+
 static int textParse(FILE *propsFile, char *propsLineBuff)
 {
 	int		logicalLineNo, lineSegmentLength, buffIndex,
 			isMultiline, lineLength;
 	char		*comment;
+	enum parser_lineTypeE	lineType=LT_MISC;
+	void			*indexObj;
 
 	/**	EXPLANATION:
 	 * In kernel-index mode, the filenames in the list file are all directly
@@ -227,10 +242,32 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 
 		// Don't waste time calling the parser on 0 length lines.
 		if (lineLength < 2) { continue; };
-		printf("Line %d, String(%02d): \"%s\".\n", logicalLineNo, lineLength, propsLineBuff);
+		lineType = parser_parseLine(propsLineBuff, &indexObj);
+if (lineType == LT_MESSAGE || lineType == LT_DISASTER_MESSAGE) {
+	printf("Line %03d: MESSAGE(%02d): \"%s\".\n", logicalLineNo, ((struct zudiIndexMessageS *)indexObj)->id, ((struct zudiIndexMessageS *)indexObj)->message);
+} else {
+	printf("Line %03d, String(%02d)(%s): \"%s\".\n", logicalLineNo, lineLength, lineTypeStrings[lineType], propsLineBuff);
+};
+
+		if (lineType == LT_UNKNOWN)
+		{
+			printf("Line %d: Error: Unknown statement. Aborting.\n",
+				logicalLineNo);
+
+			break;
+		};
+
+		if (lineType == LT_INVALID)
+		{
+			printf("Line %d: Error: Invalid arguments to "
+				"statement. Aborting.\n",
+				logicalLineNo);
+
+			break;
+		};
 	} while (!feof(propsFile));
 
-	return EXIT_SUCCESS;
+	return (lineType == LT_UNKNOWN) ? EXIT_SUCCESS : 4;
 }
 
 int main(int argc, char **argv)
@@ -239,6 +276,23 @@ int main(int argc, char **argv)
 	int		ret;
 
 	parseCommandLine(argc, argv);
+	if (programMode == MODE_PRINT_SIZES)
+	{
+		printf("Sizes of the types:\n"
+			"\tindex header %zi.\n"
+			"\tdevice record %zi.\n"
+			"\tdriver record %zi.\n"
+			"\tregion record %zi.\n"
+			"\tmessage record %zi.\n",
+			sizeof(struct zudiIndexHeaderS),
+			sizeof(struct zudiIndexDeviceS),
+			sizeof(struct zudiIndexDriverS),
+			sizeof(struct zudiIndexRegionS),
+			sizeof(struct zudiIndexMessageS));
+
+		exit(EXIT_SUCCESS);
+	};
+
 	if (programMode != MODE_ADD) {
 		printAndExit(argv[0], "Only ADD mode is supported for now", 2);
 	};
@@ -250,26 +304,15 @@ int main(int argc, char **argv)
 
 	if (iFile == NULL) { printAndExit(argv[0], "Invalid input file", 2); };
 
+	parser_initializeNewDriverState(0);
 	if (parseMode == PARSE_TEXT) {
 		ret = textParse(iFile, propsLineBuffMem);
 	} else {
 		ret = binaryParse(iFile, propsLineBuffMem);
 	};
 
+	parser_releaseState();
 	fclose(iFile);
-
-	printf("Sizes of the types:\n"
-		"\tindex header %zi.\n"
-		"\tdevice record %zi.\n"
-		"\tdriver record %zi.\n"
-		"\tregion record %zi.\n"
-		"\tmessage record %zi.\n",
-		sizeof(struct zudiIndexHeaderS),
-		sizeof(struct zudiIndexDeviceS),
-		sizeof(struct zudiIndexDriverS),
-		sizeof(struct zudiIndexRegionS),
-		sizeof(struct zudiIndexMessageS));
-
 	exit(ret);
 }
 
