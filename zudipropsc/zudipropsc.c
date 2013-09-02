@@ -42,8 +42,11 @@ static const char *usageMessage = "Usage:\n\tzudipropsc -<a|l|r> <file> "
 
 enum parseModeE		parseMode=PARSE_NONE;
 enum programModeE	programMode=MODE_NONE;
+int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0;
+
 char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
 char			propsLineBuffMem[515];
+char			verboseBuff[515];
 
 static void parseCommandLine(int argc, char **argv)
 {
@@ -51,6 +54,13 @@ static void parseCommandLine(int argc, char **argv)
 			basePathArgIndex=-1, indexPathArgIndex=-1;
 
 	if (argc < 3) { printAndExit(argv[0], usageMessage, 1); };
+
+	// Check for verbose switch.
+	for (i=1; i<argc; i++)
+	{
+		if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose"))
+			{ verboseMode = 1; continue; };
+	};
 
 	// First find out the action we are to carry out.
 	for (i=1; i<argc; i++)
@@ -160,9 +170,12 @@ static int binaryParse(FILE *propsFile, char *propsLineBuff)
 
 char		*lineTypeStrings[] =
 {
-	"UNKNOWN", "INVALID", "MISC", "DRIVER", "MODULE", "REGION", "DEVICE", "MESSAGE",
-	"DISASTER_MESSAGE", "MESSAGE_FILE", "CHILD_BIND_OPS",
-	"INTERNAL_BIND_OPS", "PARENT_BIND_OPS", "METALANGUAGE", "READABLE_FILE"
+	"UNKNOWN", "INVALID", "OVERFLOW", "LIMIT_EXCEEDED", "MISC",
+	"DRIVER", "MODULE", "REGION", "DEVICE",
+	"MESSAGE", "DISASTER_MESSAGE",
+	"MESSAGE_FILE",
+	"CHILD_BIND_OPS", "INTERNAL_BIND_OPS", "PARENT_BIND_OPS",
+	"METALANGUAGE", "READABLE_FILE"
 };
 
 static int textParse(FILE *propsFile, char *propsLineBuff)
@@ -243,11 +256,26 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 		// Don't waste time calling the parser on 0 length lines.
 		if (lineLength < 2) { continue; };
 		lineType = parser_parseLine(propsLineBuff, &indexObj);
-if (lineType == LT_MESSAGE || lineType == LT_DISASTER_MESSAGE) {
-	printf("Line %03d: MESSAGE(%02d): \"%s\".\n", logicalLineNo, ((struct zudiIndexMessageS *)indexObj)->id, ((struct zudiIndexMessageS *)indexObj)->message);
-} else {
-	printf("Line %03d, String(%02d)(%s): \"%s\".\n", logicalLineNo, lineLength, lineTypeStrings[lineType], propsLineBuff);
-};
+
+		if (lineType != LT_UNKNOWN && lineType != LT_INVALID
+			&& lineType != LT_LIMIT_EXCEEDED
+			&& lineType != LT_OVERFLOW && verboseMode)
+		{
+			if (lineType != LT_MISC && lineType != LT_DEVICE
+				&& lineType != LT_MODULE
+				&& lineType != LT_REGION)
+			{
+				printf("Line %03d: %s.\n",
+					logicalLineNo, verboseBuff);
+			}
+			else
+			{
+				printf("Line %03d(%s): \"%s\".\n",
+					logicalLineNo,
+					lineTypeStrings[lineType],
+					propsLineBuff);
+			};
+		};
 
 		if (lineType == LT_UNKNOWN)
 		{
@@ -309,6 +337,14 @@ int main(int argc, char **argv)
 		ret = textParse(iFile, propsLineBuffMem);
 	} else {
 		ret = binaryParse(iFile, propsLineBuffMem);
+	};
+
+	// Some extra checks.
+	if (!hasRequiresUdi)
+	{
+		printAndExit(
+			argv[0], "Error: Driver does not have requires udi.\n",
+			5);
 	};
 
 	parser_releaseState();

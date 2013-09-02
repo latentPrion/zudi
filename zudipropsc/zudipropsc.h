@@ -11,6 +11,9 @@ enum programModeE {
 
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
+extern int			hasRequiresUdi, hasRequiresUdiPhysio,
+				verboseMode;
+extern char			verboseBuff[];
 
 inline static void printAndExit(char *progname, const char *msg, int errcode)
 {
@@ -19,7 +22,8 @@ inline static void printAndExit(char *progname, const char *msg, int errcode)
 }
 
 enum parser_lineTypeE {
-	LT_UNKNOWN=0, LT_INVALID, LT_MISC, LT_DRIVER, LT_MODULE, LT_REGION,
+	LT_UNKNOWN=0, LT_INVALID, LT_OVERFLOW, LT_LIMIT_EXCEEDED, LT_MISC,
+	LT_DRIVER, LT_MODULE, LT_REGION,
 	LT_DEVICE, LT_MESSAGE, LT_DISASTER_MESSAGE, LT_MESSAGE_FILE,
 	LT_CHILD_BIND_OPS, LT_INTERNAL_BIND_OPS, LT_PARENT_BIND_OPS,
 	LT_METALANGUAGE, LT_READABLE_FILE };
