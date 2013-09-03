@@ -7,13 +7,14 @@
 
 enum parseModeE { PARSE_NONE, PARSE_TEXT, PARSE_BINARY };
 enum programModeE { 
-	MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE, MODE_PRINT_SIZES };
+	MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE, MODE_PRINT_SIZES,
+	MODE_CREATE };
 
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
 extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 				verboseMode;
-extern char			verboseBuff[];
+extern char			verboseBuff[], *basePath;
 
 inline static void printAndExit(char *progname, const char *msg, int errcode)
 {

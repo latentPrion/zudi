@@ -14,93 +14,116 @@
 struct zudiIndexHeaderS
 {
 	// Version of the record format used in this index file.
-	uint8_t		endianness;
+	// "endianness" is a NULL-terminated string of either "le" or "be".
+	char		endianness[4];
 	uint16_t	majorVersion, minorVersion;
-	uint16_t	nRecords;
-	uint8_t		reserved[128];
+	uint32_t	nRecords;
+	uint8_t		reserved[64];
 };
 
 enum zudiIndexDeviceAttrTypeE {
-	ZUDI_INDEX_DEVATTR_STRING=0, ZUDI_INDEX_DEVATTR_UBIT32,
-	ZUDI_INDEX_DEVATTR_BOOL, ZUDI_INDEX_DEVATTR_ARRAY };
+	ZUDI_DEVICE_ATTR_STRING=0, ZUDI_DEVICE_ATTR_UBIT32,
+	ZUDI_DEVICE_ATTR_BOOL, ZUDI_DEVICE_ATTR_ARRAY8 };
 
-#define ZUDI_DEVICE_MAX_NATTRIBUTES		(16)
+#define ZUDI_DEVICE_MAX_NATTRIBUTES		(20)
+#define ZUDI_DEVICE_ATTRIB_NAME_MAXLEN		(32)
+#define ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN		(64)
 struct zudiIndexDeviceS
 {
-	uint16_t	id, driverId;
-	uint16_t	deviceNameIndex, metaIndex;
-	uint8_t		nAttributes;
-	struct
+	struct zudiIndexDeviceHeaderS
 	{
-		enum zudiIndexDeviceAttrTypeE	type;
-		char				name[32], value[64];
-	} attributes[ZUDI_DEVICE_MAX_NATTRIBUTES];
+		uint16_t	driverId, index;
+		uint16_t	messageIndex, metaIndex;
+		uint8_t		nAttributes;
+	}h;
+
+	struct zudiIndexDeviceDataS
+	{
+		struct
+		{
+			uint8_t		type, size;
+			char		name[ZUDI_DEVICE_ATTRIB_NAME_MAXLEN],
+					value[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+		} attributes[ZUDI_DEVICE_MAX_NATTRIBUTES];
+	}d;
 };
 
-#define ZUDI_DRIVER_MAX_NREQUIREMENTS		(10)
-#define ZUDI_DRIVER_MAX_NMETALANGUAGES		(12)
+#define ZUDI_DRIVER_MAX_NREQUIREMENTS		(16)
+#define ZUDI_DRIVER_MAX_NMETALANGUAGES		(16)
 #define ZUDI_DRIVER_MAX_NCHILD_BOPS		(12)
-#define ZUDI_DRIVER_MAX_NPARENT_BOPS		(4)
-#define ZUDI_DRIVER_MAX_NINTERNAL_BOPS		(16)
-#define ZUDI_DRIVER_MAX_NMODULES		(4)
+#define ZUDI_DRIVER_MAX_NPARENT_BOPS		(8)
+#define ZUDI_DRIVER_MAX_NINTERNAL_BOPS		(24)
+#define ZUDI_DRIVER_MAX_NMODULES		(16)
 
 #define ZUDI_DRIVER_SHORTNAME_MAXLEN		(16)
-#define ZUDI_DRIVER_RELEASE_MAXLEN		(16)
+#define ZUDI_DRIVER_RELEASE_MAXLEN		(32)
 #define ZUDI_DRIVER_REQUIREMENT_MAXLEN		(16)
 #define ZUDI_DRIVER_METALANGUAGE_MAXLEN		(16)
+#define ZUDI_DRIVER_BASEPATH_MAXLEN		(128)
 
 struct zudiIndexDriverS
 {
-	// TODO: Add support for custom attributes.
-	uint16_t	id;
-	uint32_t	nameIndex, supplierIndex, contactIndex;
-	char		shortName[ZUDI_DRIVER_SHORTNAME_MAXLEN];
-	char		releaseString[ZUDI_DRIVER_RELEASE_MAXLEN];
-	char		releaseStringIndex;
-
-	uint8_t		nMetalanguages, nChildBops, nParentBops, nInternalBops,
-			nModules, nRequirements,
-			nMessages, nDisasterMessages,
-			nMessageFiles, nReadableFiles, nRegions;
-
-	struct
+	struct zudiIndexDriverHeaderS
 	{
-		uint32_t	version;
-		char		name[ZUDI_DRIVER_REQUIREMENT_MAXLEN];
-	} requirements[ZUDI_DRIVER_MAX_NREQUIREMENTS];
+		// TODO: Add support for custom attributes.
+		uint16_t	id;
+		uint32_t	nameIndex, supplierIndex, contactIndex;
+		char		shortName[ZUDI_DRIVER_SHORTNAME_MAXLEN];
+		char		releaseString[ZUDI_DRIVER_RELEASE_MAXLEN];
+		char		releaseStringIndex;
+		uint32_t	requiredUdiVersion;
+		char		basePath[ZUDI_DRIVER_BASEPATH_MAXLEN];
 
-	struct
-	{
-		uint16_t	index;
-		char		name[ZUDI_DRIVER_METALANGUAGE_MAXLEN];
-	} metalanguages[ZUDI_DRIVER_MAX_NMETALANGUAGES];
+		uint8_t		nMetalanguages, nChildBops, nParentBops,
+				nInternalBops,
+				nModules, nRequirements,
+				nMessages, nDisasterMessages,
+				nMessageFiles, nReadableFiles, nRegions,
+				nDevices;
+	} h;
 
-	struct
+	struct zudiIndexDriverDataS
 	{
-		uint16_t	metaIndex, regionIndex, opsIndex;
-	} childBops[ZUDI_DRIVER_MAX_NCHILD_BOPS];
+		struct
+		{
+			uint32_t	version;
+			char		name[ZUDI_DRIVER_REQUIREMENT_MAXLEN];
+		} requirements[ZUDI_DRIVER_MAX_NREQUIREMENTS];
 
-	struct
-	{
-		uint16_t	metaIndex, regionIndex, opsIndex, bindCbIndex;
-	} parentBops[ZUDI_DRIVER_MAX_NPARENT_BOPS];
+		struct
+		{
+			uint16_t	index;
+			char		name[ZUDI_DRIVER_METALANGUAGE_MAXLEN];
+		} metalanguages[ZUDI_DRIVER_MAX_NMETALANGUAGES];
 
-	struct
-	{
-		uint16_t	metaIndex, regionIndex,
-				opsIndex0, opsIndex1, bindCbIndex;
-	} internalBops[ZUDI_DRIVER_MAX_NINTERNAL_BOPS];
+		struct
+		{
+			uint16_t	metaIndex, regionIndex, opsIndex;
+		} childBops[ZUDI_DRIVER_MAX_NCHILD_BOPS];
 
-	struct
-	{
-		uint16_t	index;
-		char		fileName[ZUDI_FILENAME_MAXLEN];
-	} modules[ZUDI_DRIVER_MAX_NMODULES];
+		struct
+		{
+			uint16_t	metaIndex, regionIndex, opsIndex,
+					bindCbIndex;
+		} parentBops[ZUDI_DRIVER_MAX_NPARENT_BOPS];
+
+		struct
+		{
+			uint16_t	metaIndex, regionIndex,
+					opsIndex0, opsIndex1, bindCbIndex;
+		} internalBops[ZUDI_DRIVER_MAX_NINTERNAL_BOPS];
+
+		struct
+		{
+			uint16_t	index;
+			char		fileName[ZUDI_FILENAME_MAXLEN];
+		} modules[ZUDI_DRIVER_MAX_NMODULES];
+	} d;
 };
 
 enum zudiIndexRegionPrioE	{
-	ZUDI_INDEX_REGIONPRIO_LOW=0, ZUDI_INDEX_REGIONPRIO_MEDIUM,
-	ZUDI_INDEX_REGIONPRIO_HIGH };
+	ZUDI_REGION_PRIO_LOW=0, ZUDI_REGION_PRIO_MEDIUM,
+	ZUDI_REGION_PRIO_HIGH };
 
 enum zudiIndexRegionLatencyE {
 	ZUDI_INDEX_REGIONLAT_NON_CRITICAL=0, ZUDI_INDEX_REGIONLAT_NON_OVER,
@@ -109,36 +132,36 @@ enum zudiIndexRegionLatencyE {
 
 #define	ZUDI_REGION_FLAGS_FP		(1<<0)
 #define	ZUDI_REGION_FLAGS_DYNAMIC	(1<<1)
-#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<1)
+#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
 struct zudiIndexRegionS
 {
-	uint16_t	id, driverId, index, moduleIndex;
-	enum zudiIndexRegionPrioE	priority;
-	enum zudiIndexRegionLatencyE	latency;
+	uint16_t	driverId, index, moduleIndex;
+	uint8_t		priority;
+	uint8_t		latency;
 	uint32_t	flags;
 };
 
 struct zudiIndexMessageS
 {
-	uint16_t	id, driverId;
+	uint16_t	driverId, index;
 	char		message[ZUDI_MESSAGE_MAXLEN];
 };
 
 struct zudiIndexDisasterMessageS
 {
-	uint16_t	id, driverId;
+	uint16_t	driverId, index;
 	char		message[ZUDI_MESSAGE_MAXLEN];
 };
 
 struct zudiIndexMessageFileS
 {
-	uint16_t	driverId;
+	uint16_t	driverId, index;
 	char		fileName[ZUDI_FILENAME_MAXLEN];
 };
 
 struct zudiIndexReadableFileS
 {
-	uint16_t	id, driverId;
+	uint16_t	driverId, index;
 	char		fileName[ZUDI_FILENAME_MAXLEN];
 };
 

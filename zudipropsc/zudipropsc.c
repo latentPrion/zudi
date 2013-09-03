@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include "zudipropsc.h"
 
 
@@ -34,7 +35,8 @@
  **/
 #define UDIPROPS_LINE_MAXLEN		(512)
 
-static const char *usageMessage = "Usage:\n\tzudipropsc -<a|l|r> <file> "
+static const char *usageMessage = "Usage:\n\tzudipropsc -<c|a|l|r> "
+					"<file|endianness> "
 					"[-txt|-bin] "
 					" [-i <index-dir>] [-b <base-path>]\n"
 					"Note: For --printsizes, include one "
@@ -46,7 +48,7 @@ int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0;
 
 char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
 char			propsLineBuffMem[515];
-char			verboseBuff[515];
+char			verboseBuff[1024];
 
 static void parseCommandLine(int argc, char **argv)
 {
@@ -77,6 +79,9 @@ static void parseCommandLine(int argc, char **argv)
 
 		if (!strcmp(argv[i], "-r"))
 			{ programMode = MODE_REMOVE; break; };
+
+		if (!strcmp(argv[i], "-c"))
+			{ programMode = MODE_CREATE; break; };
 	};
 
 	actionArgIndex = i;
@@ -140,6 +145,9 @@ static void parseCommandLine(int argc, char **argv)
 	if (indexPathArgIndex == -1) { indexPath = "@h:zambesii/drivers"; }
 	else { indexPath = argv[indexPathArgIndex + 1]; };
 
+	// CREATE mode only needs the endianness and the index path.
+	if (programMode == MODE_CREATE) { return; };
+
 	if (basePathArgIndex == -1 && programMode == MODE_ADD)
 	{
 		printAndExit(
@@ -149,6 +157,15 @@ static void parseCommandLine(int argc, char **argv)
 	};
 
 	if (basePathArgIndex != -1) { basePath = argv[basePathArgIndex + 1]; };
+	if (strlen(basePath) >= ZUDI_DRIVER_BASEPATH_MAXLEN)
+	{
+		printf("This program accepts basepaths with up to %d "
+			"characters.\n",
+			ZUDI_DRIVER_BASEPATH_MAXLEN);
+
+		printAndExit(
+			argv[0], "Base path exceeds %d characters", 6);
+	};
 }
 
 static int binaryParse(FILE *propsFile, char *propsLineBuff)
@@ -261,9 +278,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 			&& lineType != LT_LIMIT_EXCEEDED
 			&& lineType != LT_OVERFLOW && verboseMode)
 		{
-			if (lineType != LT_MISC && lineType != LT_DEVICE
-				&& lineType != LT_MODULE
-				&& lineType != LT_REGION)
+			if (lineType != LT_MISC)
 			{
 				printf("Line %03d: %s.\n",
 					logicalLineNo, verboseBuff);
@@ -298,6 +313,14 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 	return (lineType == LT_UNKNOWN) ? EXIT_SUCCESS : 4;
 }
 
+static struct stat		dirStat;
+int folderExists(char *path)
+{
+	if (stat(path, &dirStat) != 0) { return 0; };
+	if (!S_ISDIR(dirStat.st_mode)) { return 0; };
+	return 1;
+}
+
 int main(int argc, char **argv)
 {
 	FILE		*iFile;
@@ -323,6 +346,19 @@ int main(int argc, char **argv)
 
 	if (programMode != MODE_ADD) {
 		printAndExit(argv[0], "Only ADD mode is supported for now", 2);
+	};
+
+	// Check to see if the index directory exists.
+	if (!folderExists(indexPath)) {
+		printAndExit(argv[0], "Index path invalid, or not a folder", 5);
+	};
+
+	// Only check to see if the base path exists for ADD.
+	if (programMode == MODE_ADD && !folderExists(basePath))
+	{
+		printf("%s: Warning: Base path \"%s\" does not exist or is "
+			"not a folder.\n",
+			argv[0], basePath);
 	};
 
 	// Try to open up the input file.
