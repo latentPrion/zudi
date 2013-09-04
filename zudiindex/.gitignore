@@ -1,6 +1,6 @@
 list
 *.udiprops
-zudipropsc
+zudiindex
 *.o
 *.zudid-index
 *.zudim-index

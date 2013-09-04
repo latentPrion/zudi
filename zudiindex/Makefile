@@ -1,20 +1,20 @@
 .PHONY=fonyphile
 CFLAGS=-O3 -Wall -Wextra -pedantic -std=c99
 
-all: zudipropsc
+all: zudiindex
 
-zudipropsc: parse.o
-zudipropsc.o: zudipropsc.h zudiIndex.h
+zudiindex: parse.o
+zudiindex.o: zudipropsc.h zudiIndex.h
 parse.o: zudipropsc.h zudiIndex.h
 
 install:
-	install zudipropsc /usr/bin
+	install zudiindex /usr/bin
 
 uninstall:
-	rm -f /usr/bin/zudipropsc
+	rm -f /usr/bin/zudiindex
 
 clean: fonyphile
-	rm -f *.o zudipropsc
+	rm -f *.o zudiindex
 fonyphile:
 	rm -f clean fonyphile
 
