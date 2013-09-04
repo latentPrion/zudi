@@ -188,7 +188,7 @@ static int createIndex(const char *files[])
 
 		return 0;
 	};
-	
+
 	// Allocate and fill in the index header.
 	indexHeader = malloc(sizeof(*indexHeader));
 	if (indexHeader == NULL) { return 0; };
@@ -222,7 +222,7 @@ static int createIndex(const char *files[])
 			return 0;
 		};
 
-		if (strcmp(files[i], "driver-headers.udi-index") != 0)
+		if (strcmp(files[i], "driver-headers.zudi-index") != 0)
 		{
 			fclose(currFile);
 			continue;
@@ -445,11 +445,11 @@ int folderExists(char *path)
 
 const char		*indexFileNames[] =
 {
-	"driver-headers.udi-index", "driver-data.udi-index",
-	"device-headers.udi-index", "device-data.udi-index",
-	"message-files.udi-index", "readable-files.udi-index",
-	"regions.udi-index",
-	"messages.udi-index", "disaster-messages.udi-index",
+	"driver-headers.zudi-index", "driver-data.zudi-index",
+	"device-headers.zudi-index", "device-data.zudi-index",
+	"message-files.zudi-index", "readable-files.zudi-index",
+	"regions.zudi-index",
+	"messages.zudi-index", "disaster-messages.zudi-index",
 	// Terminate this list with a NULL always.
 	NULL
 };

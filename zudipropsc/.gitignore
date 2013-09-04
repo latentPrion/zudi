@@ -2,7 +2,7 @@ list
 *.udiprops
 zudipropsc
 *.o
-*.udid-index
-*.udim-index
-*.udi-index
+*.zudid-index
+*.zudim-index
+*.zudi-index
 *.tmp
