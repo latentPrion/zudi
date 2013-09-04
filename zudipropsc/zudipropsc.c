@@ -195,7 +195,7 @@ static int createIndex(const char *files[])
 	memset(indexHeader, 0, sizeof(*indexHeader));
 
 	// The rest of the fields can remain blank for now.
-	strcpy(indexHeader->endianness, "le");
+	strcpy(indexHeader->endianness, inputFileName);
 
 	for (i=0; files[i] != NULL; i++)
 	{
