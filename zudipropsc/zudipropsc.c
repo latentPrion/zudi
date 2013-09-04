@@ -44,6 +44,7 @@ static const char *usageMessage = "Usage:\n\tzudipropsc -<c|a|l|r> "
 
 enum parseModeE		parseMode=PARSE_NONE;
 enum programModeE	programMode=MODE_NONE;
+enum propsTypeE		propsType=DRIVER_PROPS;
 int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0;
 
 char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
@@ -61,7 +62,11 @@ static void parseCommandLine(int argc, char **argv)
 	for (i=1; i<argc; i++)
 	{
 		if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose"))
-			{ verboseMode = 1; break; };
+			{ verboseMode = 1; continue; };
+
+		if (!strcmp(argv[i], "-meta"))
+			{ propsType = META_PROPS; continue; };
+
 	};
 
 	// First find out the action we are to carry out.
@@ -267,7 +272,8 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 			isMultiline, lineLength;
 	char		*comment;
 	enum parser_lineTypeE	lineType=LT_MISC;
-	void			*indexObj;
+	void			*indexObj, *ptr;
+	(void) ptr;
 
 	/**	EXPLANATION:
 	 * In kernel-index mode, the filenames in the list file are all directly
@@ -292,7 +298,8 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 
 		do
 		{
-			fgets(
+
+			ptr = fgets(
 				&propsLineBuff[buffIndex], UDIPROPS_LINE_MAXLEN,
 				propsFile);
 

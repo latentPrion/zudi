@@ -10,8 +10,11 @@ enum programModeE {
 	MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE, MODE_PRINT_SIZES,
 	MODE_CREATE };
 
+enum propsTypeE { DRIVER_PROPS, META_PROPS };
+
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
+extern enum propsTypeE		propsType;
 extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 				verboseMode;
 extern char			verboseBuff[], *basePath;
