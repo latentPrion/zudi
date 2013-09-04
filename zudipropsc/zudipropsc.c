@@ -61,7 +61,7 @@ static void parseCommandLine(int argc, char **argv)
 	for (i=1; i<argc; i++)
 	{
 		if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "--verbose"))
-			{ verboseMode = 1; continue; };
+			{ verboseMode = 1; break; };
 	};
 
 	// First find out the action we are to carry out.
@@ -157,7 +157,8 @@ static void parseCommandLine(int argc, char **argv)
 	};
 
 	if (basePathArgIndex != -1) { basePath = argv[basePathArgIndex + 1]; };
-	if (strlen(basePath) >= ZUDI_DRIVER_BASEPATH_MAXLEN)
+	// basepath is required in ADD and accepted in REMOVE.
+	if (basePath != NULL && strlen(basePath) >= ZUDI_DRIVER_BASEPATH_MAXLEN)
 	{
 		printf("This program accepts basepaths with up to %d "
 			"characters.\n",
@@ -194,6 +195,71 @@ char		*lineTypeStrings[] =
 	"CHILD_BIND_OPS", "INTERNAL_BIND_OPS", "PARENT_BIND_OPS",
 	"METALANGUAGE", "READABLE_FILE"
 };
+
+static inline int isBadLineType(enum parser_lineTypeE lineType)
+{
+	return (lineType == LT_UNKNOWN || lineType == LT_INVALID
+		|| lineType == LT_OVERFLOW || lineType == LT_LIMIT_EXCEEDED);
+}
+
+static void printBadLineType(enum parser_lineTypeE lineType, int logicalLineNo)
+{
+	if (lineType == LT_UNKNOWN)
+	{
+		fprintf(
+			stderr,
+			"Line %d: Error: Unknown statement. Aborting.\n",
+			logicalLineNo);
+	};
+
+	if (lineType == LT_INVALID)
+	{
+		fprintf(
+			stderr, "Line %d: Error: Invalid arguments to "
+			"statement. Aborting.\n",
+			logicalLineNo);
+	};
+
+	if (lineType == LT_OVERFLOW)
+	{
+		fprintf(
+			stderr, "Line %d: Error: an argument overflows either "
+			"a UDI imposed limit, or a limit imposed by this "
+			"program.\n",
+			logicalLineNo);
+	};
+
+	if (lineType == LT_LIMIT_EXCEEDED)
+	{
+		fprintf(stderr, "Line %d: Error: The number of statements of "
+			"this type exceeds the capability of this program to "
+			"process. This is not a UDI-defined limit.\n",
+			logicalLineNo);
+	};
+}
+
+static void verboseModePrint(
+	enum parser_lineTypeE lineType, int logicalLineNo,
+	const char *verboseString, const char *rawLineString
+	)
+{
+	if (lineType == LT_MISC)
+	{
+		printf("Line %03d(%s): \"%s\".\n",
+			logicalLineNo,
+			lineTypeStrings[lineType],
+			rawLineString);
+
+		return;
+	};
+
+	if (!isBadLineType(lineType))
+	{
+		printf("Line %03d: %s.\n",
+			logicalLineNo, verboseString);
+	};
+
+}
 
 static int textParse(FILE *propsFile, char *propsLineBuff)
 {
@@ -274,38 +340,16 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 		if (lineLength < 2) { continue; };
 		lineType = parser_parseLine(propsLineBuff, &indexObj);
 
-		if (lineType != LT_UNKNOWN && lineType != LT_INVALID
-			&& lineType != LT_LIMIT_EXCEEDED
-			&& lineType != LT_OVERFLOW && verboseMode)
+		if (verboseMode)
 		{
-			if (lineType != LT_MISC)
-			{
-				printf("Line %03d: %s.\n",
-					logicalLineNo, verboseBuff);
-			}
-			else
-			{
-				printf("Line %03d(%s): \"%s\".\n",
-					logicalLineNo,
-					lineTypeStrings[lineType],
-					propsLineBuff);
-			};
+			verboseModePrint(
+				lineType, logicalLineNo, verboseBuff,
+				propsLineBuff);
 		};
 
-		if (lineType == LT_UNKNOWN)
+		if (isBadLineType(lineType))
 		{
-			printf("Line %d: Error: Unknown statement. Aborting.\n",
-				logicalLineNo);
-
-			break;
-		};
-
-		if (lineType == LT_INVALID)
-		{
-			printf("Line %d: Error: Invalid arguments to "
-				"statement. Aborting.\n",
-				logicalLineNo);
-
+			printBadLineType(lineType, logicalLineNo);
 			break;
 		};
 	} while (!feof(propsFile));

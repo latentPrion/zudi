@@ -42,8 +42,14 @@ struct zudiIndexDeviceS
 		struct
 		{
 			uint8_t		type, size;
-			char		name[ZUDI_DEVICE_ATTRIB_NAME_MAXLEN],
-					value[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+			char		name[ZUDI_DEVICE_ATTRIB_NAME_MAXLEN];
+			union
+			{
+				char	string[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+				uint8_t	array8[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+				uint32_t	unsigned32;
+				uint8_t		boolval;
+			} value;
 		} attributes[ZUDI_DEVICE_MAX_NATTRIBUTES];
 	}d;
 };

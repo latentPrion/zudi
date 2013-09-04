@@ -811,7 +811,8 @@ static const char *parseDeviceAttribute(
 			{ goto fail; };
 
 		strcpyUpToWhitespace(
-			d->d.attributes[d->h.nAttributes].value, line, white);
+			d->d.attributes[d->h.nAttributes].value.string,
+			line, white);
 
 		goto success;
 	};
@@ -821,7 +822,7 @@ static const char *parseDeviceAttribute(
 			ZUDI_DEVICE_ATTR_UBIT32;
 
 		line = skipWhitespaceIn(white);
-		*((uint32_t *)&d->d.attributes[d->h.nAttributes].value) =
+		d->d.attributes[d->h.nAttributes].value.unsigned32 =
 			strtoul(line, &white, 0);
 
 		if (line == white) { goto fail; };
@@ -835,9 +836,9 @@ static const char *parseDeviceAttribute(
 		d->d.attributes[d->h.nAttributes].type = ZUDI_DEVICE_ATTR_BOOL;
 		line = skipWhitespaceIn(white);
 		if (*line == 't' || *line == 'T') {
-			d->d.attributes[d->h.nAttributes].value[0] = 1;
+			d->d.attributes[d->h.nAttributes].value.boolval = 1;
 		} else if (*line == 'f' || *line == 'F') {
-			d->d.attributes[d->h.nAttributes].value[0] = 0;
+			d->d.attributes[d->h.nAttributes].value.boolval = 0;
 		} else { goto fail; };
 
 		retOffset = 1;
@@ -863,13 +864,13 @@ static const char *parseDeviceAttribute(
 			if (byte > 15) { goto fail; };
 			if (i % 2 == 0)
 			{
-				d->d.attributes[d->h.nAttributes].value[j] =
-					byte << 4;
+				d->d.attributes[d->h.nAttributes].value
+					.array8[j] = byte << 4;
 			}
 			else
 			{
-				d->d.attributes[d->h.nAttributes].value[j] |=
-					byte;
+				d->d.attributes[d->h.nAttributes].value
+					.array8[j] |= byte;
 
 				j++;
 			};
@@ -919,52 +920,45 @@ static void *parseDevice(const char *line)
 	{
 		printLen = sprintf(
 			verboseBuff,
-			"DEVICE(index %d, %d, %d, %d attrs):\n",
+			"DEVICE(index %d, %d, %d, %d attrs)",
 			ret->h.index, ret->h.messageIndex, ret->h.metaIndex,
 			ret->h.nAttributes);
 
 		for (i=0; i<ret->h.nAttributes; i++)
 		{
+			printLen += sprintf(&verboseBuff[printLen], ".\n");
 			switch (ret->d.attributes[i].type)
 			{
 			case ZUDI_DEVICE_ATTR_STRING:
 				printLen += sprintf(
 					&verboseBuff[printLen],
-					"\tSTR %s, %s.\n",
-					ret->d.attributes[i]
-						.name,
-					ret->d.attributes[i]
-						.value);
+					"\tSTR %s: \"%s\"",
+					ret->d.attributes[i].name,
+					ret->d.attributes[i].value.string);
 
 				break;
 			case ZUDI_DEVICE_ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
-					"\tARR %s, size %d.\n",
-					ret->d.attributes[i]
-						.name,
-					ret->d.attributes[i]
-						.size);
+					"\tARR %s: size %d",
+					ret->d.attributes[i].name,
+					ret->d.attributes[i].size);
 
 				break;
 			case ZUDI_DEVICE_ATTR_BOOL:
 				printLen += sprintf(
 					&verboseBuff[printLen],
-					"\tBOOL %s, %d.\n",
-					ret->d.attributes[i]
-						.name,
-					ret->d.attributes[i]
-						.value[0]);
+					"\tBOOL %s: %d",
+					ret->d.attributes[i].name,
+					ret->d.attributes[i].value.boolval);
 
 				break;
 			case ZUDI_DEVICE_ATTR_UBIT32:
 				printLen += sprintf(
 					&verboseBuff[printLen],
-					"\tU32 %s, 0x%x.\n",
-					ret->d.attributes[i]
-						.name,
-					*((uint32_t *)&ret->d.attributes[
-						i].value));
+					"\tU32 %s: 0x%x",
+					ret->d.attributes[i].name,
+					ret->d.attributes[i].value.unsigned32);
 
 				break;
 			};
