@@ -4,4 +4,5 @@ zudipropsc
 *.o
 *.udid-index
 *.udim-index
+*.udi-index
 *.tmp

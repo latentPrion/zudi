@@ -123,13 +123,9 @@ static void parseCommandLine(int argc, char **argv)
 
 	inputFileName = argv[actionArgIndex + 1];
 
+	// In list mode, no more than 5 arguments are valid.
 	if (programMode == MODE_LIST)
-	{
-		// In list mode, no more than 3 arguments are valid.
-		if (argc > 3) { printAndExit(argv[0], usageMessage, 1); };
-		// Return early because the rest of the parsing is unnecessary.
-		return;
-	};
+		{ if (argc > 5) { printAndExit(argv[0], usageMessage, 1); }; };
 
 	for (i=1; i<argc; i++)
 	{
@@ -151,7 +147,7 @@ static void parseCommandLine(int argc, char **argv)
 	else { indexPath = argv[indexPathArgIndex + 1]; };
 
 	// CREATE mode only needs the endianness and the index path.
-	if (programMode == MODE_CREATE) { return; };
+	if (programMode == MODE_CREATE || programMode == MODE_LIST) { return; };
 
 	if (basePathArgIndex == -1 && programMode == MODE_ADD)
 	{
@@ -172,6 +168,81 @@ static void parseCommandLine(int argc, char **argv)
 		printAndExit(
 			argv[0], "Base path exceeds %d characters", 6);
 	};
+}
+
+static int createIndex(const char *files[])
+{
+	FILE		*currFile;
+	char		*fullName=NULL;
+	int		i, blocksWritten;
+	struct zudiIndexHeaderS		*indexHeader;
+
+	/**	EXPLANATION:
+	 * Creates a new series of index files. Clears and overwrites any index
+	 * files already in existence in the index path.
+	 **/
+	if (strcmp(inputFileName, "le") && strcmp(inputFileName, "be"))
+	{
+		fprintf(stderr, "Error: CREATE mode requires endianness.\n"
+			"\t-c <le|be>.\n");
+
+		return 0;
+	};
+	
+	// Allocate and fill in the index header.
+	indexHeader = malloc(sizeof(*indexHeader));
+	if (indexHeader == NULL) { return 0; };
+	memset(indexHeader, 0, sizeof(*indexHeader));
+
+	// The rest of the fields can remain blank for now.
+	strcpy(indexHeader->endianness, "le");
+
+	for (i=0; files[i] != NULL; i++)
+	{
+		fullName = realloc(
+			fullName, strlen(indexPath) + strlen(files[i]) + 2);
+
+		if (fullName == NULL) { return 0; };
+		strcpy(fullName, indexPath);
+		if (indexPath[strlen(indexPath) - 1] != '/')
+		{
+			strcpy(&fullName[strlen(indexPath)], "/");
+			strcat(&fullName[strlen(indexPath) + 1], files[i]);
+		} else {
+			strcat(&fullName[strlen(indexPath)], files[i]);
+		};
+
+		currFile = fopen(fullName, "w");
+		if (currFile == NULL)
+		{
+			fprintf(stderr, "Error: Failed to create index file "
+				"%s.\n",
+				fullName);
+
+			return 0;
+		};
+
+		if (strcmp(files[i], "driver-headers.udi-index") != 0)
+		{
+			fclose(currFile);
+			continue;
+		};
+
+		blocksWritten = fwrite(
+			indexHeader, sizeof(*indexHeader), 1, currFile);
+
+		if (blocksWritten != 1)
+		{
+			fprintf(stderr, "Error: Failed to write index header "
+				"to driver index file.\n");
+
+			return 0;
+		};
+
+		fclose(currFile);
+	};
+
+	return 1;
 }
 
 static int binaryParse(FILE *propsFile, char *propsLineBuff)
@@ -372,6 +443,17 @@ int folderExists(char *path)
 	return 1;
 }
 
+const char		*indexFileNames[] =
+{
+	"driver-headers.udi-index", "driver-data.udi-index",
+	"device-headers.udi-index", "device-data.udi-index",
+	"message-files.udi-index", "readable-files.udi-index",
+	"regions.udi-index",
+	"messages.udi-index", "disaster-messages.udi-index",
+	// Terminate this list with a NULL always.
+	NULL
+};
+
 int main(int argc, char **argv)
 {
 	FILE		*iFile;
@@ -382,26 +464,34 @@ int main(int argc, char **argv)
 	{
 		printf("Sizes of the types:\n"
 			"\tindex header %zi.\n"
-			"\tdevice record %zi.\n"
-			"\tdriver record %zi.\n"
+			"\tdevice header record %zi.\n"
+			"\tdriver header record %zi.\n"
 			"\tregion record %zi.\n"
 			"\tmessage record %zi.\n",
 			sizeof(struct zudiIndexHeaderS),
-			sizeof(struct zudiIndexDeviceS),
-			sizeof(struct zudiIndexDriverS),
+			sizeof(struct zudiIndexDeviceHeaderS),
+			sizeof(struct zudiIndexDriverHeaderS),
 			sizeof(struct zudiIndexRegionS),
 			sizeof(struct zudiIndexMessageS));
 
 		exit(EXIT_SUCCESS);
 	};
 
-	if (programMode != MODE_ADD) {
-		printAndExit(argv[0], "Only ADD mode is supported for now", 2);
-	};
-
 	// Check to see if the index directory exists.
 	if (!folderExists(indexPath)) {
 		printAndExit(argv[0], "Index path invalid, or not a folder", 5);
+	};
+
+	if (programMode != MODE_ADD && programMode != MODE_CREATE)
+	{
+		printAndExit(
+			argv[0], "Only ADD and CREATE modes are supported "
+			"for now", 2);
+	};
+
+	// Create the new index files and exit.
+	if (programMode == MODE_CREATE) {
+		exit((createIndex(indexFileNames)) ? EXIT_SUCCESS : 7);
 	};
 
 	// Only check to see if the base path exists for ADD.
