@@ -16,7 +16,7 @@ struct zudiIndexHeaderS
 	// Version of the record format used in this index file.
 	// "endianness" is a NULL-terminated string of either "le" or "be".
 	char		endianness[4];
-	uint16_t	majorVersion, minorVersion;
+	uint16_t	majorVersion, minorVersion, nextDriverId;
 	uint32_t	nRecords;
 	uint8_t		reserved[64];
 };
@@ -35,6 +35,7 @@ struct zudiIndexDeviceS
 		uint16_t	driverId, index;
 		uint16_t	messageIndex, metaIndex;
 		uint8_t		nAttributes;
+		uint32_t	dataFileOffset;
 	}h;
 
 	struct zudiIndexDeviceDataS
@@ -80,6 +81,7 @@ struct zudiIndexDriverS
 		uint32_t	requiredUdiVersion;
 		char		basePath[ZUDI_DRIVER_BASEPATH_MAXLEN];
 
+		uint32_t	dataFileOffset;
 		uint8_t		nMetalanguages, nChildBops, nParentBops,
 				nInternalBops,
 				nModules, nRequirements,

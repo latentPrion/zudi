@@ -19,6 +19,7 @@ extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 				verboseMode;
 extern char			verboseBuff[], *basePath;
 
+char *makeFullName(char *reallocMem, const char *path, const char *fileName);
 inline static void printAndExit(char *progname, const char *msg, int errcode)
 {
 	printf("%s: %s.\n", progname, msg);

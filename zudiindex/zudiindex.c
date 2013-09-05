@@ -170,6 +170,23 @@ static void parseCommandLine(int argc, char **argv)
 	};
 }
 
+char *makeFullName(
+	char *reallocMem, const char *indexPath, const char *fileName
+	)
+{
+	char		*ret;
+	int		pathLen;
+
+	pathLen = strlen(indexPath);
+	ret = realloc(reallocMem, pathLen + strlen(fileName) + 2);
+	if (ret == NULL) { return NULL; };
+
+	strcpy(ret, indexPath);
+	if (indexPath[pathLen - 1] != '/') { strcat(ret, "/"); };
+	strcat(ret, fileName);
+	return ret;
+}
+
 static int createIndex(const char *files[])
 {
 	FILE		*currFile;
@@ -199,19 +216,7 @@ static int createIndex(const char *files[])
 
 	for (i=0; files[i] != NULL; i++)
 	{
-		fullName = realloc(
-			fullName, strlen(indexPath) + strlen(files[i]) + 2);
-
-		if (fullName == NULL) { return 0; };
-		strcpy(fullName, indexPath);
-		if (indexPath[strlen(indexPath) - 1] != '/')
-		{
-			strcpy(&fullName[strlen(indexPath)], "/");
-			strcat(&fullName[strlen(indexPath) + 1], files[i]);
-		} else {
-			strcat(&fullName[strlen(indexPath)], files[i]);
-		};
-
+		fullName = makeFullName(fullName, indexPath, files[i]);
 		currFile = fopen(fullName, "w");
 		if (currFile == NULL)
 		{
