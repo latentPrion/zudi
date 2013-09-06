@@ -16,8 +16,8 @@ struct zudiIndexHeaderS
 	// Version of the record format used in this index file.
 	// "endianness" is a NULL-terminated string of either "le" or "be".
 	char		endianness[4];
-	uint16_t	majorVersion, minorVersion, nextDriverId;
-	uint32_t	nRecords;
+	uint16_t	majorVersion, minorVersion;
+	uint32_t	nRecords, nextDriverId;
 	uint8_t		reserved[64];
 };
 
@@ -32,7 +32,8 @@ struct zudiIndexDeviceS
 {
 	struct zudiIndexDeviceHeaderS
 	{
-		uint16_t	driverId, index;
+		uint32_t	driverId;
+		uint16_t	index;
 		uint16_t	messageIndex, metaIndex;
 		uint8_t		nAttributes;
 		uint32_t	dataFileOffset;
@@ -73,8 +74,8 @@ struct zudiIndexDriverS
 	struct zudiIndexDriverHeaderS
 	{
 		// TODO: Add support for custom attributes.
-		uint16_t	id;
-		uint32_t	nameIndex, supplierIndex, contactIndex;
+		uint32_t	id;
+		uint16_t	nameIndex, supplierIndex, contactIndex;
 		char		shortName[ZUDI_DRIVER_SHORTNAME_MAXLEN];
 		char		releaseString[ZUDI_DRIVER_RELEASE_MAXLEN];
 		char		releaseStringIndex;
@@ -143,7 +144,8 @@ enum zudiIndexRegionLatencyE {
 #define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
 struct zudiIndexRegionS
 {
-	uint16_t	driverId, index, moduleIndex;
+	uint32_t	driverId;
+	uint16_t	index, moduleIndex;
 	uint8_t		priority;
 	uint8_t		latency;
 	uint32_t	flags;
@@ -151,19 +153,22 @@ struct zudiIndexRegionS
 
 struct zudiIndexMessageS
 {
-	uint16_t	driverId, index;
+	uint32_t	driverId;
+	uint16_t	index;
 	char		message[ZUDI_MESSAGE_MAXLEN];
 };
 
 struct zudiIndexDisasterMessageS
 {
-	uint16_t	driverId, index;
+	uint32_t	driverId;
+	uint16_t	index;
 	char		message[ZUDI_MESSAGE_MAXLEN];
 };
 
 struct zudiIndexMessageFileS
 {
-	uint16_t	driverId, index;
+	uint32_t	driverId;
+	uint16_t	index;
 	char		fileName[ZUDI_FILENAME_MAXLEN];
 };
 
