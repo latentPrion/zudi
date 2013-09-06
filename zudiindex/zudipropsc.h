@@ -15,14 +15,14 @@ enum propsTypeE { DRIVER_PROPS, META_PROPS };
 enum exitStatusE {
 	EX_SUCCESS=EXIT_SUCCESS, EX_BAD_COMMAND_LINE, EX_INVALID_INDEX_PATH,
 	EX_GENERAL, EX_UNKNOWN, EX_NO_REQUIRES_UDI, EX_INVALID_INPUT_FILE,
-	EX_PARSE_ERROR };
+	EX_PARSE_ERROR, EX_NO_INDEX };
 
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
 extern enum propsTypeE		propsType;
 extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 				verboseMode;
-extern char			verboseBuff[], *basePath;
+extern char			verboseBuff[], *basePath, *indexPath;
 
 char *makeFullName(char *reallocMem, const char *path, const char *fileName);
 inline static int printAndReturn(char *progname, const char *msg, int errcode)

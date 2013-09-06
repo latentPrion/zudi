@@ -212,6 +212,7 @@ const char		*indexFileNames[] =
 	"message-files.zudi-index", "readable-files.zudi-index",
 	"regions.zudi-index",
 	"messages.zudi-index", "disaster-messages.zudi-index",
+	"ranks.zudi-index", "provides.zudi-index",
 	// Terminate this list with a NULL always.
 	NULL
 };
@@ -471,11 +472,58 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 	return (feof(propsFile)) ? EX_SUCCESS : EX_PARSE_ERROR;
 }
 
+static int getNextDriverId(uint32_t *driverId)
+{
+	struct zudiIndexHeaderS		*driverHeader;
+	FILE				*driverHeaderIndex;
+	char				*fullName=NULL;
+
+	fullName = makeFullName(
+		fullName, indexPath, "driver-headers.zudi-index");
+
+	if (fullName == NULL) { return 0; };
+
+	driverHeader = malloc(sizeof(*driverHeader));
+	if (driverHeader == NULL) { return 0; };
+
+	driverHeaderIndex = fopen(fullName, "r+");
+	if (driverHeaderIndex == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open driver-header index.\n");
+		return 0;
+	};
+
+	if (fread(driverHeader, sizeof(*driverHeader), 1, driverHeaderIndex)
+		!= 1)
+	{
+		fclose(driverHeaderIndex);
+		fprintf(stderr, "Error: Failed to read index header.\n");
+		return 0;
+	};
+
+	*driverId = driverHeader->nextDriverId++;
+
+	if (fseek(driverHeaderIndex, 0, SEEK_SET) != 0)
+		{ fclose(driverHeaderIndex); return 0; };
+
+	if (fwrite(driverHeader, sizeof(*driverHeader), 1, driverHeaderIndex)
+		!= 1)
+	{
+		fclose(driverHeaderIndex);
+		fprintf(stderr, "Error: Failed to rewrite index header.\n");
+		return 0;
+	};
+		
+	fclose(driverHeaderIndex);
+	return 1;
+}
+
 static int addMode(int argc, char **argv)
 {
 	FILE		*iFile;
 	int		ret;
 	(void)		argc;
+	uint32_t	driverId;
 
 	// Try to open up the input file.
 	iFile = fopen(
@@ -490,7 +538,14 @@ static int addMode(int argc, char **argv)
 				EX_INVALID_INPUT_FILE));
 	};
 
-	parser_initializeNewDriverState(0);
+	if (!getNextDriverId(&driverId))
+	{
+		exit(printAndReturn(
+			argv[0], "Failed to get next driver ID",
+			EX_UNKNOWN));
+	};
+
+	parser_initializeNewDriverState(driverId);
 	index_initialize();
 	if (parseMode == PARSE_TEXT) {
 		ret = textParse(iFile, propsLineBuffMem);
@@ -508,7 +563,13 @@ static int addMode(int argc, char **argv)
 				EX_NO_REQUIRES_UDI));
 	};
 
-	// index_writeToDisk();
+	if (!index_writeToDisk())
+	{
+		exit(printAndReturn(
+			argv[0], "Error: Failed to write index to disk files",
+			EX_UNKNOWN));
+	};
+
 	index_free();
 	parser_releaseState();
 	fclose(iFile);
@@ -516,6 +577,14 @@ static int addMode(int argc, char **argv)
 }
 
 static struct stat		dirStat;
+
+int fileExists(char *path)
+{
+	if (stat(path, &dirStat) != 0) { return 0; };
+	if (!S_ISREG(dirStat.st_mode)) { return 0; };
+	return 1;
+}
+
 int folderExists(char *path)
 {
 	if (stat(path, &dirStat) != 0) { return 0; };
@@ -525,6 +594,9 @@ int folderExists(char *path)
 
 int main(int argc, char **argv)
 {
+	int		i;
+	char		*fullName=NULL;
+
 	parseCommandLine(argc, argv);
 	if (programMode == MODE_PRINT_SIZES)
 	{
@@ -546,16 +618,14 @@ int main(int argc, char **argv)
 	// Check to see if the index directory exists.
 	if (!folderExists(indexPath))
 	{
-		exit(
-			printAndReturn(
+		exit(printAndReturn(
 				argv[0], "Index path invalid, or not a folder",
 				EX_INVALID_INDEX_PATH));
 	};
 
 	if (programMode != MODE_ADD && programMode != MODE_CREATE)
 	{
-		exit(
-			printAndReturn(
+		exit(printAndReturn(
 				argv[0], "Only ADD and CREATE modes are "
 				"supported for now", EX_GENERAL));
 	};
@@ -565,13 +635,40 @@ int main(int argc, char **argv)
 		exit(createMode(argc, argv));
 	};
 
+	/* For any mode other than CREATE and PRINT_SIZES, there must be a
+	 * valid index already in existence.
+	 **/
+	if (programMode == MODE_ADD || programMode == MODE_LIST
+		|| programMode == MODE_REMOVE)
+	{
+		for (i=0; indexFileNames[i] != NULL; i++)
+		{
+			fullName = makeFullName(
+				fullName, indexPath, indexFileNames[i]);
+
+			if (fullName == NULL)
+			{
+				exit(printAndReturn(
+					argv[0], "Out of memory", EX_GENERAL));
+			};
+
+			if (!fileExists(fullName))
+			{
+				exit(printAndReturn(
+					argv[0], "No index found.\n"
+					"Try options -c <endianness>",
+					EX_NO_INDEX));
+			};
+		};
+	};
+
 	// Only check to see if the base path exists for ADD.
 	if (programMode == MODE_ADD)
 	{
 		if (!folderExists(basePath))
 		{
-			printf("%s: Warning: Base path \"%s\" does not exist "
-				"or is not a folder.\n",
+			fprintf(stderr, "%s: Warning: Base path \"%s\" does "
+				"not exist or is not a folder.\n",
 				argv[0], basePath);
 		};
 

@@ -94,6 +94,243 @@ void index_free(void)
 	list_free(&readableFileList);
 }
 
+static int index_writeDriverHeader(void)
+{
+	FILE		*dhFile;
+	char		*fullName=NULL;
+	struct zudiIndexDriverS	*dStruct;
+
+	fullName = makeFullName(
+		fullName, indexPath, "driver-headers.zudi-index");
+
+	if (fullName == NULL) { return 0; };
+
+	dhFile = fopen(fullName, "a");
+	if (dhFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open driver header index for "
+			"appending.\n");
+
+		return 0;
+	};
+
+	dStruct = parser_getCurrentDriverState();
+	if (fwrite(&dStruct->h, sizeof(dStruct->h), 1, dhFile) != 1)
+	{
+		fprintf(stderr, "Error: failed to write out driver header.\n");
+		return 0;
+	};
+
+	fclose(dhFile);
+	return 1;
+}
+
+static int index_writeDriverData(void)
+{
+	FILE		*ddFile;
+	int		i;
+	struct zudiIndexDriverS	*dStruct;
+	char		*fullName=NULL;
+
+	fullName = makeFullName(fullName, indexPath, "driver-data.zudi-index");
+	if (fullName == NULL)
+	{
+		fprintf(stderr, "Error: Nomem in makeFullName for driver-data index.\n");
+		return 0;
+	};
+
+	ddFile = fopen(fullName, "a");
+	if (ddFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open driver-data index.\n");
+		return 0;
+	};
+
+	dStruct = parser_getCurrentDriverState();
+
+	// First write out the modules.
+	for (i=0; i<dStruct->h.nModules; i++)
+	{
+		if (fwrite(
+			&dStruct->d.modules[i],
+			sizeof(dStruct->d.modules[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out module.\n");
+			return 0;
+		};
+	};
+
+	// Then write out the requirements.
+	for (i=0; i<dStruct->h.nRequirements; i++)
+	{
+		if (fwrite(
+			&dStruct->d.requirements[i],
+			sizeof(dStruct->d.requirements[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out requirement.\n");
+			return 0;
+		};
+	};
+
+	// Then write out the metalanguage indexes.
+	for (i=0; i<dStruct->h.nMetalanguages; i++)
+	{
+		if (fwrite(
+			&dStruct->d.metalanguages[i],
+			sizeof(dStruct->d.metalanguages[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out metalanguage.\n");
+			return 0;
+		};
+	};
+
+	// Then write out the parent bops.
+	for (i=0; i<dStruct->h.nParentBops; i++)
+	{
+		if (fwrite(
+			&dStruct->d.parentBops[i],
+			sizeof(dStruct->d.parentBops[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out parent bop.\n");
+			return 0;
+		};
+	};
+
+	// Then write out the child bops.
+	for (i=0; i<dStruct->h.nChildBops; i++)
+	{
+		if (fwrite(
+			&dStruct->d.childBops[i],
+			sizeof(dStruct->d.childBops[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out child bop.\n");
+			return 0;
+		};
+	};
+
+	// Then write out the internal bops.
+	for (i=0; i<dStruct->h.nInternalBops; i++)
+	{
+		if (fwrite(
+			&dStruct->d.internalBops[i],
+			sizeof(dStruct->d.internalBops[i]),
+			1, ddFile)
+			!= 1)
+		{
+			fclose(ddFile);
+			fprintf(stderr, "Error: Failed to write out internal bop.\n");
+			return 0;
+		};
+	};
+
+	// Done.
+	fclose(ddFile);
+	return 1;
+}
+
+int index_writeDeviceHeaders(void)
+{
+	struct listElementS		*tmp;
+	struct zudiIndexDeviceS		*dev;
+	FILE				*dhFile;
+	char				*fullName=NULL;
+
+	fullName = makeFullName(
+		fullName, indexPath, "device-headers.zudi-index");
+
+	if (fullName == NULL)
+	{
+		fprintf(stderr, "Error: Nomem in makeFullName for device-headers index.\n");
+		return 0;
+	};
+
+	dhFile = fopen(fullName, "a");
+	if (dhFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open device-headers index.\n");
+		return 0;
+	};
+
+	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
+	{
+		dev = tmp->item;
+
+		// Write the device header out.
+		if (fwrite(&dev->h, sizeof(dev->h), 1, dhFile) != 1)
+		{
+			fprintf(stderr, "Error: failed to write out device header.\n");
+			fclose(dhFile);
+			return 0;
+		};
+	};
+
+	fclose(dhFile);
+	return 1;
+}
+
+static int index_writeDeviceData(void)
+{
+	struct listElementS		*tmp;
+	struct zudiIndexDeviceS		*dev;
+	FILE				*ddFile;
+	char				*fullName=NULL;
+	int				i;
+
+	fullName = makeFullName(fullName, indexPath, "device-data.zudi-index");
+
+	if (fullName == NULL)
+	{
+		fprintf(stderr, "Error: Nomem in makeFullName for device-data index.\n");
+		return 0;
+	};
+
+	ddFile = fopen(fullName, "a");
+	if (ddFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open device-data index.\n");
+		return 0;
+	};
+
+	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
+	{
+		dev = tmp->item;
+
+		for (i=0; i<dev->h.nAttributes; i++)
+		{
+			if (fwrite(
+				&dev->d.attributes[i],
+				sizeof(dev->d.attributes[i]),
+				1, ddFile)
+				!= 1)
+			{
+				fprintf(stderr, "Error: Failed to write out "
+					"device attribute.\n");
+
+				fclose(ddFile);
+				fclose(ddFile);
+			};
+		};
+	};
+
+	fclose(ddFile);
+	return 1;
+}
+
 int index_writeToDisk(void)
 {
 	/* 1. Read the index header and get the endianness of the index.
@@ -104,6 +341,11 @@ int index_writeToDisk(void)
 	 * 6. Write the device data to the idnex in append mode.
 	 * 7. FOR EACH index: write its data out.
 	 **/
-	return EX_SUCCESS;
+	if (!index_writeDriverHeader()) { return 0; };
+	if (!index_writeDriverData()) { return 0; };
+	if (!index_writeDeviceHeaders()) { return 0; };
+	if (!index_writeDeviceData()) { return 0; };
+	// if (!index_writeList()) { return 0; };
+	return 1;
 }
 
