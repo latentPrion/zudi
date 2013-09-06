@@ -46,6 +46,7 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret);
 
 void index_initialize(void);
 int index_insert(enum parser_lineTypeE lineType, void *obj);
+int index_writeToDisk(void);
 void index_free(void);
 
 #endif

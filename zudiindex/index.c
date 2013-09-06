@@ -44,6 +44,10 @@ static void list_free(struct listElementS **list)
 	*list = NULL;
 }
 
+void index_initialize(void)
+{
+}
+
 int index_insert(enum parser_lineTypeE lineType, void *obj)
 {
 	if (lineType == LT_MISC || lineType == LT_DRIVER
@@ -78,5 +82,28 @@ int index_insert(enum parser_lineTypeE lineType, void *obj)
 		fprintf(stderr, "Unknown line type fell into index_insert.\n");
 		return 0;
 	};
+}
+
+void index_free(void)
+{
+	list_free(&regionList);
+	list_free(&deviceList);
+	list_free(&messageList);
+	list_free(&disasterMessageList);
+	list_free(&messageFileList);
+	list_free(&readableFileList);
+}
+
+int index_writeToDisk(void)
+{
+	/* 1. Read the index header and get the endianness of the index.
+	 * 2. Find the next driver ID.
+	 * 3. Write the driver to the index at the end in append mode.
+	 * 4. Write the driver data to the data index.
+	 * 5. Write the device header to the index in append mode.
+	 * 6. Write the device data to the idnex in append mode.
+	 * 7. FOR EACH index: write its data out.
+	 **/
+	return EX_SUCCESS;
 }
 

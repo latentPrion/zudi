@@ -491,6 +491,7 @@ static int addMode(int argc, char **argv)
 	};
 
 	parser_initializeNewDriverState(0);
+	index_initialize();
 	if (parseMode == PARSE_TEXT) {
 		ret = textParse(iFile, propsLineBuffMem);
 	} else {
@@ -507,6 +508,8 @@ static int addMode(int argc, char **argv)
 				EX_NO_REQUIRES_UDI));
 	};
 
+	// index_writeToDisk();
+	index_free();
 	parser_releaseState();
 	fclose(iFile);
 	return ret;
