@@ -56,7 +56,7 @@ static void parseCommandLine(int argc, char **argv)
 	int		i, actionArgIndex,
 			basePathArgIndex=-1, indexPathArgIndex=-1;
 
-	if (argc < 3) { printAndExit(argv[0], usageMessage, 1); };
+	if (argc < 3) { exit(printAndReturn(argv[0], usageMessage, 1)); };
 
 	// Check for verbose switch.
 	for (i=1; i<argc; i++)
@@ -107,11 +107,12 @@ static void parseCommandLine(int argc, char **argv)
 		// If the parse mode wasn't specified:
 		if (parseMode == PARSE_NONE)
 		{
-			printAndExit(
-				argv[0],
-				"Input file format [-txt|bin] must be included "
-				"when adding new drivers",
-				1);
+			exit(
+				printAndReturn(
+					argv[0],
+					"Input file format [-txt|bin] must be "
+					"included when adding new drivers",
+					EX_BAD_COMMAND_LINE));
 		};
 	};
 
@@ -119,13 +120,25 @@ static void parseCommandLine(int argc, char **argv)
 	 * invalid (that is, it overflows "argc"), we exit the program.
 	 **/
 	if (programMode == MODE_NONE || actionArgIndex + 1 >= argc)
-		{ printAndExit(argv[0], usageMessage, 1); };
+	{
+		exit(
+			printAndReturn(
+				argv[0], usageMessage, EX_BAD_COMMAND_LINE));
+	};
 
 	inputFileName = argv[actionArgIndex + 1];
 
 	// In list mode, no more than 5 arguments are valid.
 	if (programMode == MODE_LIST)
-		{ if (argc > 5) { printAndExit(argv[0], usageMessage, 1); }; };
+	{
+		if (argc > 5)
+		{
+			exit(
+				printAndReturn(
+					argv[0], usageMessage,
+					EX_BAD_COMMAND_LINE));
+		};
+	};
 
 	for (i=1; i<argc; i++)
 	{
@@ -139,8 +152,9 @@ static void parseCommandLine(int argc, char **argv)
 	/* Ensure that the index for the index-path or base-path arguments isn't
 	 * beyond the bounds of the number of arguments we actually got.
 	 **/
-	if (indexPathArgIndex + 1 >= argc || basePathArgIndex + 1 >= argc)
-		{ printAndExit(argv[0], usageMessage, 1); };
+	if (indexPathArgIndex + 1 >= argc || basePathArgIndex + 1 >= argc) {
+		exit(printAndReturn(argv[0], usageMessage, EX_BAD_COMMAND_LINE));
+	};
 
 	// If no index path was explicitly provided, assume a default path.
 	if (indexPathArgIndex == -1) { indexPath = "@h:zambesii/drivers"; }
@@ -151,10 +165,12 @@ static void parseCommandLine(int argc, char **argv)
 
 	if (basePathArgIndex == -1 && programMode == MODE_ADD)
 	{
-		printAndExit(
-			argv[0],
-			"Base path must be provided when adding new drivers",
-			1);
+		exit(
+			printAndReturn(
+				argv[0],
+				"Base path must be provided when adding new "
+				"drivers",
+				EX_BAD_COMMAND_LINE));
 	};
 
 	if (basePathArgIndex != -1) { basePath = argv[basePathArgIndex + 1]; };
@@ -165,8 +181,10 @@ static void parseCommandLine(int argc, char **argv)
 			"characters.\n",
 			ZUDI_DRIVER_BASEPATH_MAXLEN);
 
-		printAndExit(
-			argv[0], "Base path exceeds %d characters", 6);
+		exit(
+			printAndReturn(
+				argv[0], "Base path exceeds max accepted "
+				"characters", EX_BAD_COMMAND_LINE));
 	};
 }
 
@@ -187,12 +205,24 @@ char *makeFullName(
 	return ret;
 }
 
-static int createIndex(const char *files[])
+const char		*indexFileNames[] =
 {
-	FILE		*currFile;
-	char		*fullName=NULL;
-	int		i, blocksWritten;
+	"driver-headers.zudi-index", "driver-data.zudi-index",
+	"device-headers.zudi-index", "device-data.zudi-index",
+	"message-files.zudi-index", "readable-files.zudi-index",
+	"regions.zudi-index",
+	"messages.zudi-index", "disaster-messages.zudi-index",
+	// Terminate this list with a NULL always.
+	NULL
+};
+
+static int createMode(int argc, char **argv)
+{
+	FILE				*currFile;
+	char				*fullName=NULL;
+	int				i, blocksWritten;
 	struct zudiIndexHeaderS		*indexHeader;
+	(void)argc; (void)argv;
 
 	/**	EXPLANATION:
 	 * Creates a new series of index files. Clears and overwrites any index
@@ -214,9 +244,9 @@ static int createIndex(const char *files[])
 	// The rest of the fields can remain blank for now.
 	strcpy(indexHeader->endianness, inputFileName);
 
-	for (i=0; files[i] != NULL; i++)
+	for (i=0; indexFileNames[i] != NULL; i++)
 	{
-		fullName = makeFullName(fullName, indexPath, files[i]);
+		fullName = makeFullName(fullName, indexPath, indexFileNames[i]);
 		currFile = fopen(fullName, "w");
 		if (currFile == NULL)
 		{
@@ -227,7 +257,7 @@ static int createIndex(const char *files[])
 			return 0;
 		};
 
-		if (strcmp(files[i], "driver-headers.zudi-index") != 0)
+		if (strcmp(indexFileNames[i], "driver-headers.zudi-index") != 0)
 		{
 			fclose(currFile);
 			continue;
@@ -438,7 +468,48 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 		if (!index_insert(lineType, indexObj)) { break; };
 	} while (!feof(propsFile));
 
-	return (feof(propsFile)) ? EXIT_SUCCESS : 4;
+	return (feof(propsFile)) ? EX_SUCCESS : EX_PARSE_ERROR;
+}
+
+static int addMode(int argc, char **argv)
+{
+	FILE		*iFile;
+	int		ret;
+	(void)		argc;
+
+	// Try to open up the input file.
+	iFile = fopen(
+		inputFileName,
+		((parseMode == PARSE_TEXT) ? "r" : "rb"));
+
+	if (iFile == NULL)
+	{
+		exit(
+			printAndReturn(
+				argv[0], "Invalid input file",
+				EX_INVALID_INPUT_FILE));
+	};
+
+	parser_initializeNewDriverState(0);
+	if (parseMode == PARSE_TEXT) {
+		ret = textParse(iFile, propsLineBuffMem);
+	} else {
+		ret = binaryParse(iFile, propsLineBuffMem);
+	};
+
+	// Some extra checks.
+	if (!hasRequiresUdi)
+	{
+		exit(
+			printAndReturn(
+				argv[0], "Error: Driver does not have requires "
+				"udi.\n",
+				EX_NO_REQUIRES_UDI));
+	};
+
+	parser_releaseState();
+	fclose(iFile);
+	return ret;
 }
 
 static struct stat		dirStat;
@@ -449,22 +520,8 @@ int folderExists(char *path)
 	return 1;
 }
 
-const char		*indexFileNames[] =
-{
-	"driver-headers.zudi-index", "driver-data.zudi-index",
-	"device-headers.zudi-index", "device-data.zudi-index",
-	"message-files.zudi-index", "readable-files.zudi-index",
-	"regions.zudi-index",
-	"messages.zudi-index", "disaster-messages.zudi-index",
-	// Terminate this list with a NULL always.
-	NULL
-};
-
 int main(int argc, char **argv)
 {
-	FILE		*iFile;
-	int		ret;
-
 	parseCommandLine(argc, argv);
 	if (programMode == MODE_PRINT_SIZES)
 	{
@@ -484,54 +541,40 @@ int main(int argc, char **argv)
 	};
 
 	// Check to see if the index directory exists.
-	if (!folderExists(indexPath)) {
-		printAndExit(argv[0], "Index path invalid, or not a folder", 5);
+	if (!folderExists(indexPath))
+	{
+		exit(
+			printAndReturn(
+				argv[0], "Index path invalid, or not a folder",
+				EX_INVALID_INDEX_PATH));
 	};
 
 	if (programMode != MODE_ADD && programMode != MODE_CREATE)
 	{
-		printAndExit(
-			argv[0], "Only ADD and CREATE modes are supported "
-			"for now", 2);
+		exit(
+			printAndReturn(
+				argv[0], "Only ADD and CREATE modes are "
+				"supported for now", EX_GENERAL));
 	};
 
 	// Create the new index files and exit.
 	if (programMode == MODE_CREATE) {
-		exit((createIndex(indexFileNames)) ? EXIT_SUCCESS : 7);
+		exit(createMode(argc, argv));
 	};
 
 	// Only check to see if the base path exists for ADD.
-	if (programMode == MODE_ADD && !folderExists(basePath))
+	if (programMode == MODE_ADD)
 	{
-		printf("%s: Warning: Base path \"%s\" does not exist or is "
-			"not a folder.\n",
-			argv[0], basePath);
+		if (!folderExists(basePath))
+		{
+			printf("%s: Warning: Base path \"%s\" does not exist "
+				"or is not a folder.\n",
+				argv[0], basePath);
+		};
+
+		exit(addMode(argc, argv));
 	};
 
-	// Try to open up the input file.
-	iFile = fopen(
-		inputFileName,
-		((parseMode == PARSE_TEXT) ? "r" : "rb"));
-
-	if (iFile == NULL) { printAndExit(argv[0], "Invalid input file", 2); };
-
-	parser_initializeNewDriverState(0);
-	if (parseMode == PARSE_TEXT) {
-		ret = textParse(iFile, propsLineBuffMem);
-	} else {
-		ret = binaryParse(iFile, propsLineBuffMem);
-	};
-
-	// Some extra checks.
-	if (!hasRequiresUdi)
-	{
-		printAndExit(
-			argv[0], "Error: Driver does not have requires udi.\n",
-			5);
-	};
-
-	parser_releaseState();
-	fclose(iFile);
-	exit(ret);
+	exit(EX_UNKNOWN);
 }
 

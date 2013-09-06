@@ -12,6 +12,11 @@ enum programModeE {
 
 enum propsTypeE { DRIVER_PROPS, META_PROPS };
 
+enum exitStatusE {
+	EX_SUCCESS=EXIT_SUCCESS, EX_BAD_COMMAND_LINE, EX_INVALID_INDEX_PATH,
+	EX_GENERAL, EX_UNKNOWN, EX_NO_REQUIRES_UDI, EX_INVALID_INPUT_FILE,
+	EX_PARSE_ERROR };
+
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
 extern enum propsTypeE		propsType;
@@ -20,10 +25,10 @@ extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 extern char			verboseBuff[], *basePath;
 
 char *makeFullName(char *reallocMem, const char *path, const char *fileName);
-inline static void printAndExit(char *progname, const char *msg, int errcode)
+inline static int printAndReturn(char *progname, const char *msg, int errcode)
 {
-	printf("%s: %s.\n", progname, msg);
-	exit(errcode);
+	fprintf(stderr, "%s: %s.\n", progname, msg);
+	return errcode;
 }
 
 enum parser_lineTypeE {
