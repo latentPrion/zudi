@@ -1025,17 +1025,17 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 		line, "internal_bind_ops", slen = strlen("internal_bind_ops")))
 	{
 		return (parseInternalBops(&line[slen]))
-			? LT_INTERNAL_BIND_OPS : LT_INVALID;
+			? LT_INTERNAL_BOPS : LT_INVALID;
 	};
 
 	if (!strncmp(line, "parent_bind_ops", slen=strlen("parent_bind_ops"))) {
 		return (parseParentBops(&line[slen]))
-			? LT_PARENT_BIND_OPS : LT_INVALID;
+			? LT_PARENT_BOPS : LT_INVALID;
 	};
 
 	if (!strncmp(line, "child_bind_ops", slen = strlen("child_bind_ops"))) {
 		return (parseChildBops(&line[slen]))
-			? LT_CHILD_BIND_OPS : LT_INVALID;
+			? LT_CHILD_BOPS : LT_INVALID;
 	};
 
 	if (!strncmp(line, "region", slen = strlen("region"))) {
