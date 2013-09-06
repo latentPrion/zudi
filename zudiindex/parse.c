@@ -893,7 +893,7 @@ static void *parseDevice(const char *line)
 {
 	struct zudiIndexDeviceS		*ret;
 	char				*tmp;
-	int				status, i, printLen;
+	int				status, i, j, printLen;
 
 	PARSER_MALLOC(&ret, struct zudiIndexDeviceS);
 	ret->h.index = currentDriver->h.nDevices;
@@ -940,9 +940,18 @@ static void *parseDevice(const char *line)
 			case ZUDI_DEVICE_ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
-					"\tARR %s: size %d",
+					"\tARR %s: size %d: ",
 					ret->d.attributes[i].name,
 					ret->d.attributes[i].size);
+
+				for (j=0; j<ret->d.attributes[i].size; j++)
+				{
+					printLen += sprintf(
+						&verboseBuff[printLen],
+						"%02X",
+						ret->d.attributes[i].value
+							.array8[j]);
+				};
 
 				break;
 			case ZUDI_DEVICE_ATTR_BOOL:

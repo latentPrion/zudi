@@ -374,7 +374,6 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 
 		do
 		{
-
 			ptr = fgets(
 				&propsLineBuff[buffIndex], UDIPROPS_LINE_MAXLEN,
 				propsFile);
@@ -435,9 +434,11 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 			printBadLineType(lineType, logicalLineNo);
 			break;
 		};
+
+		if (!index_insert(lineType, indexObj)) { break; };
 	} while (!feof(propsFile));
 
-	return (lineType == LT_UNKNOWN) ? EXIT_SUCCESS : 4;
+	return (feof(propsFile)) ? EXIT_SUCCESS : 4;
 }
 
 static struct stat		dirStat;

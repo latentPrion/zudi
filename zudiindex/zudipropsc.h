@@ -39,5 +39,9 @@ void parser_releaseState(void);
 
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret);
 
+void index_initialize(void);
+int index_insert(enum parser_lineTypeE lineType, void *obj);
+void index_free(void);
+
 #endif
 
