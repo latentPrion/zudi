@@ -331,6 +331,48 @@ static int index_writeDeviceData(void)
 	return 1;
 }
 
+static int index_writeListToDisk(
+	struct listElementS *list, const char *fileName, size_t elemSize
+	)
+{
+	struct listElementS		*tmp;
+	void				*item;
+	FILE				*indexFile;
+	char				*fullName=NULL;
+
+	fullName = makeFullName(fullName, indexPath, fileName);
+	if (fullName == NULL)
+	{
+		fprintf(stderr, "Error: Nomem in makeFullName for %s index.\n", fileName);
+		return 0;
+	};
+
+	indexFile = fopen(fullName, "a");
+	if (indexFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open %s index.\n", fileName);
+		return 0;
+	};
+
+	for (tmp = list; tmp != NULL; tmp = tmp->next)
+	{
+		item = tmp->item;
+
+		if (fwrite(item, elemSize, 1, indexFile) != 1)
+		{
+			fclose(indexFile);
+			fprintf(stderr, "Error: Failed to write element to "
+				"%s index.\n",
+				fileName);
+
+			return 0;
+		};
+	};
+
+	fclose(indexFile);
+	return 1;
+}
+
 int index_writeToDisk(void)
 {
 	/* 1. Read the index header and get the endianness of the index.
@@ -345,7 +387,27 @@ int index_writeToDisk(void)
 	if (!index_writeDriverData()) { return 0; };
 	if (!index_writeDeviceHeaders()) { return 0; };
 	if (!index_writeDeviceData()) { return 0; };
-	// if (!index_writeList()) { return 0; };
+
+	if (!index_writeListToDisk(
+		regionList, "regions.zudi-index", sizeof(struct zudiIndexRegionS)))
+		{ return 0; };
+
+	if (!index_writeListToDisk(
+		messageList, "messages.zudi-index", sizeof(struct zudiIndexMessageS)))
+		{ return 0; };
+
+	if (!index_writeListToDisk(
+		disasterMessageList, "disaster-messages.zudi-index", sizeof(struct zudiIndexDisasterMessageS)))
+		{ return 0; };
+
+	if (!index_writeListToDisk(
+		messageFileList, "message-files.zudi-index", sizeof(struct zudiIndexMessageFileS)))
+		{ return 0; };
+
+	if (!index_writeListToDisk(
+		readableFileList, "readable-files.zudi-index", sizeof(struct zudiIndexReadableFileS)))
+		{ return 0; };
+
 	return 1;
 }
 
