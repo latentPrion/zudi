@@ -13,9 +13,9 @@ enum programModeE {
 enum propsTypeE { DRIVER_PROPS, META_PROPS };
 
 enum exitStatusE {
-	EX_SUCCESS=EXIT_SUCCESS, EX_BAD_COMMAND_LINE, EX_INVALID_INDEX_PATH,
+	EX_SUCCESS=0, EX_BAD_COMMAND_LINE, EX_INVALID_INDEX_PATH,
 	EX_GENERAL, EX_UNKNOWN, EX_NO_REQUIRES_UDI, EX_INVALID_INPUT_FILE,
-	EX_PARSE_ERROR, EX_NO_INDEX };
+	EX_PARSE_ERROR, EX_NO_INDEX, EX_NOMEM, EX_FILE_OPEN, EX_FILE_IO };
 
 extern enum parseModeE		parseMode;
 extern enum programModeE	programMode;
@@ -48,6 +48,8 @@ void index_initialize(void);
 int index_insert(enum parser_lineTypeE lineType, void *obj);
 int index_writeToDisk(void);
 void index_free(void);
+
+int incrementNRecords(void);
 
 #endif
 

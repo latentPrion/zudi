@@ -18,17 +18,19 @@ static int list_insert(struct listElementS **list, void *item)
 	if (*list == NULL)
 	{
 		*list = malloc(sizeof(**list));
+		if (*list == NULL) { return EX_NOMEM; };
 		(*list)->next = NULL;
 		(*list)->item = item;
-		return 1;
+		return EX_SUCCESS;
 	};
 
 	// Else just add it at the front.
 	tmp = malloc(sizeof(*tmp));
+	if (tmp == NULL) { return EX_NOMEM; };
 	tmp->next = *list;
 	tmp->item = item;
 	*list = tmp;
-	return 1;
+	return EX_SUCCESS;
 }
 
 static void list_free(struct listElementS **list)
@@ -55,7 +57,7 @@ int index_insert(enum parser_lineTypeE lineType, void *obj)
 		|| lineType == LT_INTERNAL_BOPS
 		|| lineType == LT_MODULE || lineType == LT_METALANGUAGE)
 	{
-		return 1;
+		return EX_SUCCESS;
 	};
 
 	switch (lineType)
@@ -80,7 +82,7 @@ int index_insert(enum parser_lineTypeE lineType, void *obj)
 
 	default:
 		fprintf(stderr, "Unknown line type fell into index_insert.\n");
-		return 0;
+		return EX_UNKNOWN;
 	};
 }
 
@@ -96,14 +98,14 @@ void index_free(void)
 
 static int index_writeDriverHeader(void)
 {
-	FILE		*dhFile;
-	char		*fullName=NULL;
+	FILE			*dhFile;
+	char			*fullName=NULL;
 	struct zudiIndexDriverS	*dStruct;
 
 	fullName = makeFullName(
 		fullName, indexPath, "driver-headers.zudi-index");
 
-	if (fullName == NULL) { return 0; };
+	if (fullName == NULL) { return EX_NOMEM; };
 
 	dhFile = fopen(fullName, "a");
 	if (dhFile == NULL)
@@ -111,39 +113,40 @@ static int index_writeDriverHeader(void)
 		fprintf(stderr, "Error: Failed to open driver header index for "
 			"appending.\n");
 
-		return 0;
+		return EX_FILE_OPEN;
 	};
 
 	dStruct = parser_getCurrentDriverState();
 	if (fwrite(&dStruct->h, sizeof(dStruct->h), 1, dhFile) != 1)
 	{
 		fprintf(stderr, "Error: failed to write out driver header.\n");
-		return 0;
+		return EX_FILE_IO;
 	};
 
 	fclose(dhFile);
-	return 1;
+	return EX_SUCCESS;
 }
 
 static int index_writeDriverData(void)
 {
-	FILE		*ddFile;
-	int		i;
+	FILE			*ddFile;
+	int			i;
 	struct zudiIndexDriverS	*dStruct;
-	char		*fullName=NULL;
+	char			*fullName=NULL;
 
 	fullName = makeFullName(fullName, indexPath, "driver-data.zudi-index");
 	if (fullName == NULL)
 	{
-		fprintf(stderr, "Error: Nomem in makeFullName for driver-data index.\n");
-		return 0;
+		fprintf(stderr, "Error: Nomem in makeFullName for driver-data "
+			"index.\n");
+		return EX_NOMEM;
 	};
 
 	ddFile = fopen(fullName, "a");
 	if (ddFile == NULL)
 	{
 		fprintf(stderr, "Error: Failed to open driver-data index.\n");
-		return 0;
+		return EX_FILE_OPEN;
 	};
 
 	dStruct = parser_getCurrentDriverState();
@@ -159,7 +162,7 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out module.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
@@ -174,7 +177,7 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out requirement.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
@@ -189,7 +192,7 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out metalanguage.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
@@ -204,7 +207,7 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out parent bop.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
@@ -219,7 +222,7 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out child bop.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
@@ -234,13 +237,13 @@ static int index_writeDriverData(void)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out internal bop.\n");
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
 	// Done.
 	fclose(ddFile);
-	return 1;
+	return EX_SUCCESS;
 }
 
 int index_writeDeviceHeaders(void)
@@ -256,14 +259,14 @@ int index_writeDeviceHeaders(void)
 	if (fullName == NULL)
 	{
 		fprintf(stderr, "Error: Nomem in makeFullName for device-headers index.\n");
-		return 0;
+		return EX_NOMEM;
 	};
 
 	dhFile = fopen(fullName, "a");
 	if (dhFile == NULL)
 	{
 		fprintf(stderr, "Error: Failed to open device-headers index.\n");
-		return 0;
+		return EX_FILE_OPEN;
 	};
 
 	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
@@ -275,12 +278,12 @@ int index_writeDeviceHeaders(void)
 		{
 			fprintf(stderr, "Error: failed to write out device header.\n");
 			fclose(dhFile);
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
 	fclose(dhFile);
-	return 1;
+	return EX_SUCCESS;
 }
 
 static int index_writeDeviceData(void)
@@ -296,14 +299,14 @@ static int index_writeDeviceData(void)
 	if (fullName == NULL)
 	{
 		fprintf(stderr, "Error: Nomem in makeFullName for device-data index.\n");
-		return 0;
+		return EX_NOMEM;
 	};
 
 	ddFile = fopen(fullName, "a");
 	if (ddFile == NULL)
 	{
 		fprintf(stderr, "Error: Failed to open device-data index.\n");
-		return 0;
+		return EX_FILE_OPEN;
 	};
 
 	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
@@ -322,13 +325,13 @@ static int index_writeDeviceData(void)
 					"device attribute.\n");
 
 				fclose(ddFile);
-				fclose(ddFile);
+				return EX_FILE_IO;
 			};
 		};
 	};
 
 	fclose(ddFile);
-	return 1;
+	return EX_SUCCESS;
 }
 
 static int index_writeListToDisk(
@@ -344,14 +347,14 @@ static int index_writeListToDisk(
 	if (fullName == NULL)
 	{
 		fprintf(stderr, "Error: Nomem in makeFullName for %s index.\n", fileName);
-		return 0;
+		return EX_NOMEM;
 	};
 
 	indexFile = fopen(fullName, "a");
 	if (indexFile == NULL)
 	{
 		fprintf(stderr, "Error: Failed to open %s index.\n", fileName);
-		return 0;
+		return EX_FILE_OPEN;
 	};
 
 	for (tmp = list; tmp != NULL; tmp = tmp->next)
@@ -365,16 +368,17 @@ static int index_writeListToDisk(
 				"%s index.\n",
 				fileName);
 
-			return 0;
+			return EX_FILE_IO;
 		};
 	};
 
 	fclose(indexFile);
-	return 1;
+	return EX_SUCCESS;
 }
 
 int index_writeToDisk(void)
 {
+	int		ret;
 	/* 1. Read the index header and get the endianness of the index.
 	 * 2. Find the next driver ID.
 	 * 3. Write the driver to the index at the end in append mode.
@@ -383,31 +387,36 @@ int index_writeToDisk(void)
 	 * 6. Write the device data to the idnex in append mode.
 	 * 7. FOR EACH index: write its data out.
 	 **/
-	if (!index_writeDriverHeader()) { return 0; };
-	if (!index_writeDriverData()) { return 0; };
-	if (!index_writeDeviceHeaders()) { return 0; };
-	if (!index_writeDeviceData()) { return 0; };
+	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
+	if ((ret = index_writeDriverData()) != EX_SUCCESS) { return ret; };
+	if ((ret = index_writeDeviceHeaders()) != EX_SUCCESS) { return ret; };
+	if ((ret = index_writeDeviceData()) != EX_SUCCESS) { return ret; };
 
-	if (!index_writeListToDisk(
-		regionList, "regions.zudi-index", sizeof(struct zudiIndexRegionS)))
-		{ return 0; };
+	if ((ret = index_writeListToDisk(
+		regionList, "regions.zudi-index",
+		sizeof(struct zudiIndexRegionS))) != EX_SUCCESS)
+		{ return ret; };
 
-	if (!index_writeListToDisk(
-		messageList, "messages.zudi-index", sizeof(struct zudiIndexMessageS)))
-		{ return 0; };
+	if ((ret = index_writeListToDisk(
+		messageList, "messages.zudi-index",
+		sizeof(struct zudiIndexMessageS))) != EX_SUCCESS)
+		{ return ret; };
 
-	if (!index_writeListToDisk(
-		disasterMessageList, "disaster-messages.zudi-index", sizeof(struct zudiIndexDisasterMessageS)))
-		{ return 0; };
+	if ((ret = index_writeListToDisk(
+		disasterMessageList, "disaster-messages.zudi-index",
+		sizeof(struct zudiIndexDisasterMessageS))) != EX_SUCCESS)
+		{ return ret; };
 
-	if (!index_writeListToDisk(
-		messageFileList, "message-files.zudi-index", sizeof(struct zudiIndexMessageFileS)))
-		{ return 0; };
+	if ((ret = index_writeListToDisk(
+		messageFileList, "message-files.zudi-index",
+		sizeof(struct zudiIndexMessageFileS))) != EX_SUCCESS)
+		{ return ret; };
 
-	if (!index_writeListToDisk(
-		readableFileList, "readable-files.zudi-index", sizeof(struct zudiIndexReadableFileS)))
-		{ return 0; };
+	if ((ret = index_writeListToDisk(
+		readableFileList, "readable-files.zudi-index",
+		sizeof(struct zudiIndexReadableFileS))) != EX_SUCCESS)
+		{ return ret; };
 
-	return 1;
+	return EX_SUCCESS;
 }
 

@@ -267,7 +267,7 @@ static int createMode(int argc, char **argv)
 		blocksWritten = fwrite(
 			indexHeader, sizeof(*indexHeader), 1, currFile);
 
-		if (blocksWritten != 1)
+		if (blocksWritten < 1)
 		{
 			fprintf(stderr, "Error: Failed to write index header "
 				"to driver index file.\n");
@@ -466,10 +466,52 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 			break;
 		};
 
-		if (!index_insert(lineType, indexObj)) { break; };
+		if (index_insert(lineType, indexObj) != EX_SUCCESS) { break; };
 	} while (!feof(propsFile));
 
 	return (feof(propsFile)) ? EX_SUCCESS : EX_PARSE_ERROR;
+}
+
+int incrementNRecords(void)
+{
+	FILE				*dhFile;
+	struct zudiIndexHeaderS		*header;
+	char				*fullName=NULL;
+
+	fullName = makeFullName(
+		fullName, indexPath, "driver-headers.zudi-index");
+
+	if (fullName == NULL) { return EX_NOMEM; };
+
+	header = malloc(sizeof(*header));
+	if (header == NULL) { return EX_NOMEM; };
+
+	dhFile = fopen(fullName, "r+");
+	if (dhFile == NULL) { return EX_FILE_OPEN; };
+
+	if (fread(header, sizeof(*header), 1, dhFile) < 1)
+	{
+		fprintf(stderr, "Error: Failed to read index header for "
+			"nRecords update.\n");
+
+		return EX_FILE_IO;
+	};
+
+	header->nRecords++;
+
+	if (fseek(dhFile, 0, SEEK_SET) != 0)
+		{ fclose(dhFile); return EX_FILE_IO; };
+
+	if (fwrite(header, sizeof(*header), 1, dhFile) < 1)
+	{
+		fprintf(stderr, "Error: Failed to rewrite index header after "
+			"nRecords update.\n");
+
+		return EX_FILE_IO;
+	};
+
+	fclose(dhFile);
+	return EX_SUCCESS;
 }
 
 static int getNextDriverId(uint32_t *driverId)
@@ -494,7 +536,7 @@ static int getNextDriverId(uint32_t *driverId)
 	};
 
 	if (fread(driverHeader, sizeof(*driverHeader), 1, driverHeaderIndex)
-		!= 1)
+		< 1)
 	{
 		fclose(driverHeaderIndex);
 		fprintf(stderr, "Error: Failed to read index header.\n");
@@ -507,7 +549,7 @@ static int getNextDriverId(uint32_t *driverId)
 		{ fclose(driverHeaderIndex); return 0; };
 
 	if (fwrite(driverHeader, sizeof(*driverHeader), 1, driverHeaderIndex)
-		!= 1)
+		< 1)
 	{
 		fclose(driverHeaderIndex);
 		fprintf(stderr, "Error: Failed to rewrite index header.\n");
@@ -553,6 +595,13 @@ static int addMode(int argc, char **argv)
 		ret = binaryParse(iFile, propsLineBuffMem);
 	};
 
+	if (ret != EX_SUCCESS)
+	{
+		exit(printAndReturn(
+			argv[0], "Error: Failed to parse stage returned error",
+			ret));
+	};
+
 	// Some extra checks.
 	if (!hasRequiresUdi)
 	{
@@ -563,17 +612,18 @@ static int addMode(int argc, char **argv)
 				EX_NO_REQUIRES_UDI));
 	};
 
-	if (!index_writeToDisk())
+	ret = index_writeToDisk();
+	if (ret != EX_SUCCESS)
 	{
 		exit(printAndReturn(
 			argv[0], "Error: Failed to write index to disk files",
-			EX_UNKNOWN));
+			ret));
 	};
 
 	index_free();
 	parser_releaseState();
 	fclose(iFile);
-	return ret;
+	return incrementNRecords();
 }
 
 static struct stat		dirStat;
