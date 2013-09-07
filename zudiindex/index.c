@@ -127,7 +127,7 @@ static int index_writeDriverHeader(void)
 	return EX_SUCCESS;
 }
 
-static int index_writeDriverData(void)
+static int index_writeDriverData(uint32_t *fileOffset)
 {
 	FILE			*ddFile;
 	int			i;
@@ -149,6 +149,7 @@ static int index_writeDriverData(void)
 		return EX_FILE_OPEN;
 	};
 
+	*fileOffset = ftell(ddFile);
 	dStruct = parser_getCurrentDriverState();
 
 	// First write out the modules.
@@ -379,6 +380,7 @@ static int index_writeListToDisk(
 int index_writeToDisk(void)
 {
 	int		ret;
+	uint32_t	fileOffset;
 	/* 1. Read the index header and get the endianness of the index.
 	 * 2. Find the next driver ID.
 	 * 3. Write the driver to the index at the end in append mode.
@@ -387,8 +389,11 @@ int index_writeToDisk(void)
 	 * 6. Write the device data to the idnex in append mode.
 	 * 7. FOR EACH index: write its data out.
 	 **/
+	if ((ret = index_writeDriverData(&fileOffset)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.dataFileOffset = fileOffset;
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
-	if ((ret = index_writeDriverData()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeDeviceHeaders()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeDeviceData()) != EX_SUCCESS) { return ret; };
 
