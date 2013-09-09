@@ -9,10 +9,11 @@ parse.o: zudipropsc.h zudiIndex.h
 index.o: zudipropsc.h zudiIndex.h
 
 install:
-	install zudiindex /usr/bin
+	install zudiindex zudiindex-addall /usr/bin
+	chmod +x /usr/bin/zudiindex /usr/bin/zudiindex-addall
 
 uninstall:
-	rm -f /usr/bin/zudiindex
+	rm -f /usr/bin/zudiindex /usr/bin/zudiindex-addall
 
 clean: fonyphile
 	rm -f *.o zudiindex

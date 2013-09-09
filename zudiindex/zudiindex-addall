@@ -1,0 +1,43 @@
+#!/bin/sh
+
+wildcard=""
+propsDir="."
+indexDir=""
+usageMessage="`echo \"	$0 -<drivers|metas> [directory]\"`"
+
+case "$1" in
+	"-drivers") wildcard='*.udidprops';;
+	"-metas") wildcard='*.udimprops';;
+	*) echo "$usageMessage"; exit 1;;
+esac
+
+if [ -n "$2" ]; then propsDir="$2"; fi
+# We can leave $indexDir as an empty string because zudiindex uses a default
+# index path if none is specified, and this is desirable.
+if [ -n "$3" ]; then indexDir="$3"; fi
+
+# Expand the wildcard search into a result string.
+files="$(echo $propsDir/$wildcard)"
+
+# If there are no udiprops file matches in the propsDir, exit.
+if [ "$files" = "$propsDir/$wildcard" ];
+then exit 0;
+fi
+
+if [ "$1" = "-drivers" ]
+then
+	for i in "$files"; do
+		if [ -n "$indexDir" ]
+		then zudiindex -a "$i" -txt -b drivers -i "$indexDir"
+		else zudiindex -a "$i" -txt -b drivers
+		fi
+	done
+else
+	for i in "$files"; do
+		if [ -n "$indexDir" ]
+		then zudiindex -a "$i" -txt -meta -b metas -i "$indexDir"
+		else zudiindex -a "$i" -txt -meta -b metas -i
+		fi
+	done
+fi
+

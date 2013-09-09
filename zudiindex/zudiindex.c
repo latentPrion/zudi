@@ -234,12 +234,12 @@ static int createMode(int argc, char **argv)
 		fprintf(stderr, "Error: CREATE mode requires endianness.\n"
 			"\t-c <le|be>.\n");
 
-		return 0;
+		return EX_BAD_COMMAND_LINE;
 	};
 
 	// Allocate and fill in the index header.
 	indexHeader = malloc(sizeof(*indexHeader));
-	if (indexHeader == NULL) { return 0; };
+	if (indexHeader == NULL) { return EX_NOMEM; };
 	memset(indexHeader, 0, sizeof(*indexHeader));
 
 	// The rest of the fields can remain blank for now.
@@ -255,7 +255,7 @@ static int createMode(int argc, char **argv)
 				"%s.\n",
 				fullName);
 
-			return 0;
+			return EX_FILE_OPEN;
 		};
 
 		if (strcmp(indexFileNames[i], "driver-headers.zudi-index") != 0)
@@ -272,13 +272,13 @@ static int createMode(int argc, char **argv)
 			fprintf(stderr, "Error: Failed to write index header "
 				"to driver index file.\n");
 
-			return 0;
+			return EX_FILE_IO;
 		};
 
 		fclose(currFile);
 	};
 
-	return 1;
+	return EXIT_SUCCESS;
 }
 
 static int binaryParse(FILE *propsFile, char *propsLineBuff)
