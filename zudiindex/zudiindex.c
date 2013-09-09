@@ -45,7 +45,8 @@ static const char *usageMessage = "Usage:\n\tzudiindex -<c|a|l|r> "
 enum parseModeE		parseMode=PARSE_NONE;
 enum programModeE	programMode=MODE_NONE;
 enum propsTypeE		propsType=DRIVER_PROPS;
-int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0;
+int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0,
+			ignoreInvalidBasePath=0;
 
 char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
 char			propsLineBuffMem[515];
@@ -67,6 +68,8 @@ static void parseCommandLine(int argc, char **argv)
 		if (!strcmp(argv[i], "-meta"))
 			{ propsType = META_PROPS; continue; };
 
+		if (!strcmp(argv[i], "--ignore-invalid-basepath"))
+			{ ignoreInvalidBasePath = 1; continue; };
 	};
 
 	// First find out the action we are to carry out.
@@ -715,7 +718,7 @@ int main(int argc, char **argv)
 	// Only check to see if the base path exists for ADD.
 	if (programMode == MODE_ADD)
 	{
-		if (!folderExists(basePath))
+		if (!ignoreInvalidBasePath && !folderExists(basePath))
 		{
 			fprintf(stderr, "%s: Warning: Base path \"%s\" does "
 				"not exist or is not a folder.\n",

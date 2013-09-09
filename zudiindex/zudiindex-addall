@@ -28,15 +28,15 @@ if [ "$1" = "-drivers" ]
 then
 	for i in "$files"; do
 		if [ -n "$indexDir" ]
-		then zudiindex -a "$i" -txt -b drivers -i "$indexDir"
-		else zudiindex -a "$i" -txt -b drivers
+		then zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath -i "$indexDir"
+		else zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath
 		fi
 	done
 else
 	for i in "$files"; do
 		if [ -n "$indexDir" ]
-		then zudiindex -a "$i" -txt -meta -b metas -i "$indexDir"
-		else zudiindex -a "$i" -txt -meta -b metas -i
+		then zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i "$indexDir"
+		else zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i
 		fi
 	done
 fi
