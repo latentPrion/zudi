@@ -35,6 +35,12 @@ int parser_initializeNewDriverState(uint16_t driverId)
 	memset(currentDriver, 0, sizeof(*currentDriver));
 	currentDriver->h.id = driverId;
 	strcpy(currentDriver->h.basePath, basePath);
+	if (propsType == META_PROPS) {
+		currentDriver->h.type = DRIVERTYPE_METALANGUAGE;
+	} else {
+		currentDriver->h.type = DRIVERTYPE_DRIVER;
+	};
+
 	return 1;
 }
 

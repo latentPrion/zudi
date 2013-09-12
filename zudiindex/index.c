@@ -431,6 +431,11 @@ int index_writeToDisk(void)
 		sizeof(struct zudiIndexReadableFileS))) != EX_SUCCESS)
 		{ return ret; };
 
+	if ((ret = index_writeListToDisk(
+		provisionList, "provisions.zudi-index",
+		sizeof(struct zudiIndexProvisionS))) != EX_SUCCESS)
+		{ return ret; };
+
 	return EX_SUCCESS;
 }
 

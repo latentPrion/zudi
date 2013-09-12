@@ -69,12 +69,13 @@ struct zudiIndexDeviceS
 #define ZUDI_DRIVER_METALANGUAGE_MAXLEN		(16)
 #define ZUDI_DRIVER_BASEPATH_MAXLEN		(128)
 
+enum zudiIndexDriverTypeE	{ DRIVERTYPE_DRIVER, DRIVERTYPE_METALANGUAGE };
 struct zudiIndexDriverS
 {
 	struct zudiIndexDriverHeaderS
 	{
 		// TODO: Add support for custom attributes.
-		uint32_t	id;
+		uint32_t	id, type;
 		uint16_t	nameIndex, supplierIndex, contactIndex,
 		// Category index is only valid for meta libs, not drivers.
 				categoryIndex;

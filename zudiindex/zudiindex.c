@@ -215,7 +215,7 @@ const char		*indexFileNames[] =
 	"message-files.zudi-index", "readable-files.zudi-index",
 	"regions.zudi-index",
 	"messages.zudi-index", "disaster-messages.zudi-index",
-	/*"ranks.zudi-index",*/ "provides.zudi-index",
+	/*"ranks.zudi-index",*/ "provisions.zudi-index",
 	// Terminate this list with a NULL always.
 	NULL
 };
