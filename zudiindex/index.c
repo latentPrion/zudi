@@ -9,7 +9,7 @@ struct listElementS
 } *regionList=NULL, *deviceList=NULL,
 	*messageList=NULL, *disasterMessageList=NULL,
 	*messageFileList=NULL, *readableFileList=NULL,
-	*rankList=NULL, *provisionList=NULL;
+	/* *rankList=NULL,*/ *provisionList=NULL;
 
 static int list_insert(struct listElementS **list, void *item)
 {
@@ -81,8 +81,8 @@ int index_insert(enum parser_lineTypeE lineType, void *obj)
 	case LT_READABLE_FILE:
 		return list_insert(&readableFileList, obj);
 
-	case LT_RANK:
-		return list_insert(&rankList, obj);
+	/*case LT_RANK:
+		return list_insert(&rankList, obj);*/
 
 	case LT_PROVIDES:
 		return list_insert(&provisionList, obj);
@@ -101,7 +101,7 @@ void index_free(void)
 	list_free(&disasterMessageList);
 	list_free(&messageFileList);
 	list_free(&readableFileList);
-	list_free(&rankList);
+	// list_free(&rankList);
 	list_free(&provisionList);
 }
 

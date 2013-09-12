@@ -1003,12 +1003,30 @@ static void *parseProvides(const char *line)
 
 	if (verboseMode)
 	{
-		sprintf(verboseBuff, "PROVIDES (v0x%x): \"%s\".\n",
+		sprintf(verboseBuff, "PROVIDES (v0x%x): \"%s\"",
 			ret->version, ret->name);
 	};
 
 	return ret;
 PARSER_RELEASE_AND_EXIT(&ret);
+}
+
+static int parseCategory(const char *line)
+{
+	char		*tmp;
+
+	line = skipWhitespaceIn(line);
+
+	currentDriver->h.categoryIndex = strtoul(line, &tmp, 10);
+	if (currentDriver->h.categoryIndex == 0) { return 0; };
+
+	if (verboseMode)
+	{
+		sprintf(verboseBuff, "CATEGORY: %d",
+			currentDriver->h.categoryIndex);
+	};
+
+	return 1;
 }
 
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
@@ -1152,9 +1170,12 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 		if (!strncmp(line, "symbols", slen = strlen("symbols")))
 			{ return LT_MISC; };
 
-		if (!strncmp(line, "category", slen = strlen("category")))
-			{ return LT_MISC; };
+		if (!strncmp(line, "category", slen = strlen("category"))) {
+			return (parseCategory(&line[slen]))
+				? LT_DRIVER : LT_INVALID;
+		};
 
+		// Does not seem like rank is supported by the spec anymore.
 		if (!strncmp(line, "rank", slen = strlen("rank")))
 			{ return LT_MISC; };
 	};
