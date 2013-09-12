@@ -36,7 +36,7 @@ enum parser_lineTypeE {
 	LT_DRIVER, LT_MODULE, LT_REGION,
 	LT_DEVICE, LT_MESSAGE, LT_DISASTER_MESSAGE, LT_MESSAGE_FILE,
 	LT_CHILD_BOPS, LT_INTERNAL_BOPS, LT_PARENT_BOPS,
-	LT_METALANGUAGE, LT_READABLE_FILE };
+	LT_METALANGUAGE, LT_READABLE_FILE, LT_RANK, LT_PROVIDES };
 
 int parser_initializeNewDriverState(uint16_t driverId);
 struct zudiIndexDriverS *parser_getCurrentDriverState(void);

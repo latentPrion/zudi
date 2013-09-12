@@ -979,6 +979,38 @@ static void *parseDevice(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
+static void *parseProvides(const char *line)
+{
+	struct zudiIndexProvisionS	*ret;
+	char				*tmp;
+
+	PARSER_MALLOC(&ret, struct zudiIndexProvisionS);
+
+	line = skipWhitespaceIn(line);
+	tmp = findWhitespaceAfter(line);
+	if (tmp == NULL) { goto releaseAndExit; };
+	if (strlenUpToWhitespace(line, tmp) >= ZUDI_PROVISION_NAME_MAXLEN)
+		{ goto releaseAndExit; };
+
+	strcpyUpToWhitespace(ret->name, line, tmp);
+
+	// Now get the release version.
+	line = skipWhitespaceIn(tmp);
+	ret->version = strtoul(line, &tmp, 0);
+	if (line == tmp) { goto releaseAndExit; };
+
+	ret->driverId = currentDriver->h.id;
+
+	if (verboseMode)
+	{
+		sprintf(verboseBuff, "PROVIDES (v0x%x): \"%s\".\n",
+			ret->version, ret->name);
+	};
+
+	return ret;
+PARSER_RELEASE_AND_EXIT(&ret);
+}
+
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 {
 	int			slen;
@@ -1001,21 +1033,9 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 		return (*ret == NULL) ? LT_INVALID : LT_MESSAGE;
 	};
 
-	if (!strncmp(line, "meta", slen = strlen("meta"))) {
-		return (parseMeta(&line[slen])) ? LT_METALANGUAGE : LT_INVALID;
-	};
-
-	if (!strncmp(line, "device", slen = strlen("device"))) {
-		*ret = parseDevice(&line[slen]);
-		return (*ret == NULL) ? LT_INVALID : LT_DEVICE;
-	};
-
 	if (!strncmp(line, "requires", slen = strlen("requires"))) {
 		return (parseRequires(&line[slen])) ? LT_DRIVER : LT_INVALID;
 	};
-
-	if (!strncmp(line, "custom", slen = strlen("custom")))
-		{ return LT_MISC; };
 
 	if (!strncmp(
 		line, "pio_serialization_limit",
@@ -1031,26 +1051,8 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 		{ return LT_MISC; };
 
 	if (!strncmp(
-		line, "internal_bind_ops", slen = strlen("internal_bind_ops")))
-	{
-		return (parseInternalBops(&line[slen]))
-			? LT_INTERNAL_BOPS : LT_INVALID;
-	};
-
-	if (!strncmp(line, "parent_bind_ops", slen=strlen("parent_bind_ops"))) {
-		return (parseParentBops(&line[slen]))
-			? LT_PARENT_BOPS : LT_INVALID;
-	};
-
-	if (!strncmp(line, "child_bind_ops", slen = strlen("child_bind_ops"))) {
-		return (parseChildBops(&line[slen]))
-			? LT_CHILD_BOPS : LT_INVALID;
-	};
-
-	if (!strncmp(line, "region", slen = strlen("region"))) {
-		*ret = parseRegion(&line[slen]);
-		return (*ret == NULL) ? LT_INVALID : LT_REGION;
-	};
+		line, "source_requires", slen = strlen("source_requires")))
+		{ return LT_MISC; };
 
 	if (!strncmp(line, "module", slen = strlen("module"))) {
 		return (parseModule(&line[slen])) ? LT_DRIVER : LT_INVALID;
@@ -1059,11 +1061,6 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 	if (!strncmp(
 		line, "disaster_message", slen = strlen("disaster_message"))) {
 		*ret = parseDisasterMessage(&line[slen]);
-		return (*ret == NULL) ? LT_INVALID : LT_DISASTER_MESSAGE;
-	};
-
-	if (!strncmp(line, "readable_file", slen = strlen("readable_file"))) {
-		*ret = parseReadableFile(&line[slen]);
 		return (*ret == NULL) ? LT_INVALID : LT_DISASTER_MESSAGE;
 	};
 
@@ -1094,11 +1091,73 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 	if (!strncmp(line, "source_requires", slen = strlen("source_requires")))
 		{ return LT_MISC; };
 
-	if (!strncmp(line, "multi_parent", slen = strlen("multi_parent")))
-		{ return LT_MISC; };
+	if (propsType == DRIVER_PROPS)
+	{
+		if (!strncmp(line, "multi_parent", slen = strlen("multi_parent")))
+			{ return LT_MISC; };
 	
-	if (!strncmp(line, "enumerates", slen = strlen("enumerates")))
-		{ return LT_MISC; };
+		if (!strncmp(line, "enumerates", slen = strlen("enumerates")))
+			{ return LT_MISC; };
+
+		if (!strncmp(
+			line, "internal_bind_ops", slen = strlen("internal_bind_ops")))
+		{
+			return (parseInternalBops(&line[slen]))
+				? LT_INTERNAL_BOPS : LT_INVALID;
+		};
+
+		if (!strncmp(line, "parent_bind_ops", slen=strlen("parent_bind_ops"))) {
+			return (parseParentBops(&line[slen]))
+				? LT_PARENT_BOPS : LT_INVALID;
+		};
+
+		if (!strncmp(line, "child_bind_ops", slen = strlen("child_bind_ops"))) {
+			return (parseChildBops(&line[slen]))
+				? LT_CHILD_BOPS : LT_INVALID;
+		};
+
+		if (!strncmp(line, "meta", slen = strlen("meta"))) {
+			return (parseMeta(&line[slen])) ? LT_METALANGUAGE : LT_INVALID;
+		};
+
+		if (!strncmp(line, "device", slen = strlen("device"))) {
+			*ret = parseDevice(&line[slen]);
+			return (*ret == NULL) ? LT_INVALID : LT_DEVICE;
+		};
+
+		if (!strncmp(line, "region", slen = strlen("region"))) {
+			*ret = parseRegion(&line[slen]);
+			return (*ret == NULL) ? LT_INVALID : LT_REGION;
+		};
+
+		if (!strncmp(line, "readable_file", slen = strlen("readable_file"))) {
+			*ret = parseReadableFile(&line[slen]);
+			return (*ret == NULL) ? LT_INVALID : LT_DISASTER_MESSAGE;
+		};
+
+		if (!strncmp(line, "custom", slen = strlen("custom")))
+			{ return LT_MISC; };
+
+		if (!strncmp(line, "config_choices", slen = strlen("config_choices")))
+			{ return LT_MISC; };
+	};
+
+	if (propsType == META_PROPS)
+	{
+		if (!strncmp(line, "provides", slen = strlen("provides"))) {
+			*ret = parseProvides(&line[slen]);
+			return (*ret == NULL) ? LT_INVALID : LT_PROVIDES;
+		};
+
+		if (!strncmp(line, "symbols", slen = strlen("symbols")))
+			{ return LT_MISC; };
+
+		if (!strncmp(line, "category", slen = strlen("category")))
+			{ return LT_MISC; };
+
+		if (!strncmp(line, "rank", slen = strlen("rank")))
+			{ return LT_MISC; };
+	};
 
 	return LT_UNKNOWN;
 }

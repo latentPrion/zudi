@@ -308,7 +308,7 @@ char		*lineTypeStrings[] =
 	"MESSAGE", "DISASTER_MESSAGE",
 	"MESSAGE_FILE",
 	"CHILD_BIND_OPS", "INTERNAL_BIND_OPS", "PARENT_BIND_OPS",
-	"METALANGUAGE", "READABLE_FILE"
+	"METALANGUAGE", "READABLE_FILE", "LT_RANK", "LT_PROVIDES"
 };
 
 static inline int isBadLineType(enum parser_lineTypeE lineType)

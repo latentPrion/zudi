@@ -65,7 +65,7 @@ struct zudiIndexDeviceS
 
 #define ZUDI_DRIVER_SHORTNAME_MAXLEN		(16)
 #define ZUDI_DRIVER_RELEASE_MAXLEN		(32)
-#define ZUDI_DRIVER_REQUIREMENT_MAXLEN		(16)
+#define ZUDI_DRIVER_REQUIREMENT_MAXLEN		(32)
 #define ZUDI_DRIVER_METALANGUAGE_MAXLEN		(16)
 #define ZUDI_DRIVER_BASEPATH_MAXLEN		(128)
 
@@ -75,20 +75,25 @@ struct zudiIndexDriverS
 	{
 		// TODO: Add support for custom attributes.
 		uint32_t	id;
-		uint16_t	nameIndex, supplierIndex, contactIndex;
+		uint16_t	nameIndex, supplierIndex, contactIndex,
+		// Category index is only valid for meta libs, not drivers.
+				categoryIndex;
 		char		shortName[ZUDI_DRIVER_SHORTNAME_MAXLEN];
 		char		releaseString[ZUDI_DRIVER_RELEASE_MAXLEN];
 		char		releaseStringIndex;
 		uint32_t	requiredUdiVersion;
 		char		basePath[ZUDI_DRIVER_BASEPATH_MAXLEN];
 
-		uint32_t	dataFileOffset;
+		/* dataFileOffset is the offset within driver-data.zudi-index.
+		 * rankFileOffset is the offset within ranks.zudi-index.
+		 **/
+		uint32_t	dataFileOffset, rankFileOffset;
 		uint8_t		nMetalanguages, nChildBops, nParentBops,
 				nInternalBops,
 				nModules, nRequirements,
 				nMessages, nDisasterMessages,
 				nMessageFiles, nReadableFiles, nRegions,
-				nDevices;
+				nDevices, nRanks, nProvides;
 	} h;
 
 	struct zudiIndexDriverDataS
@@ -176,6 +181,14 @@ struct zudiIndexReadableFileS
 {
 	uint16_t	driverId, index;
 	char		fileName[ZUDI_FILENAME_MAXLEN];
+};
+
+#define ZUDI_PROVISION_NAME_MAXLEN		(32)
+struct zudiIndexProvisionS
+{
+	uint32_t	driverId;
+	uint32_t	version;
+	char		name[ZUDI_PROVISION_NAME_MAXLEN];
 };
 
 #endif
