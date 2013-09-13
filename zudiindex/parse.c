@@ -797,7 +797,7 @@ static const char *parseDeviceAttribute(
 		{ goto fail; };
 
 	strcpyUpToWhitespace(
-		d->d.attributes[d->h.nAttributes].name,
+		d->d[d->h.nAttributes].name,
 		line, white);
 
 	// Get the attribute type.
@@ -806,7 +806,7 @@ static const char *parseDeviceAttribute(
 	if (white == NULL) { goto fail; };
 
 	if (!strncmp(line, "string", strlen("string"))) {
-		d->d.attributes[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].type =
 			ZUDI_DEVICE_ATTR_STRING;
 
 		line = skipWhitespaceIn(white);
@@ -817,18 +817,18 @@ static const char *parseDeviceAttribute(
 			{ goto fail; };
 
 		strcpyUpToWhitespace(
-			d->d.attributes[d->h.nAttributes].value.string,
+			d->d[d->h.nAttributes].value.string,
 			line, white);
 
 		goto success;
 	};
 
 	if (!strncmp(line, "ubit32", strlen("ubit32"))) {
-		d->d.attributes[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].type =
 			ZUDI_DEVICE_ATTR_UBIT32;
 
 		line = skipWhitespaceIn(white);
-		d->d.attributes[d->h.nAttributes].value.unsigned32 =
+		d->d[d->h.nAttributes].value.unsigned32 =
 			strtoul(line, &white, 0);
 
 		if (line == white) { goto fail; };
@@ -839,12 +839,12 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "boolean", strlen("boolean"))) {
-		d->d.attributes[d->h.nAttributes].type = ZUDI_DEVICE_ATTR_BOOL;
+		d->d[d->h.nAttributes].type = ZUDI_DEVICE_ATTR_BOOL;
 		line = skipWhitespaceIn(white);
 		if (*line == 't' || *line == 'T') {
-			d->d.attributes[d->h.nAttributes].value.boolval = 1;
+			d->d[d->h.nAttributes].value.boolval = 1;
 		} else if (*line == 'f' || *line == 'F') {
-			d->d.attributes[d->h.nAttributes].value.boolval = 0;
+			d->d[d->h.nAttributes].value.boolval = 0;
 		} else { goto fail; };
 
 		retOffset = 1;
@@ -852,7 +852,7 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "array", strlen("array"))) {
-		d->d.attributes[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].type =
 			ZUDI_DEVICE_ATTR_ARRAY8;
 
 		line = skipWhitespaceIn(white);
@@ -870,19 +870,19 @@ static const char *parseDeviceAttribute(
 			if (byte > 15) { goto fail; };
 			if (i % 2 == 0)
 			{
-				d->d.attributes[d->h.nAttributes].value
+				d->d[d->h.nAttributes].value
 					.array8[j] = byte << 4;
 			}
 			else
 			{
-				d->d.attributes[d->h.nAttributes].value
+				d->d[d->h.nAttributes].value
 					.array8[j] |= byte;
 
 				j++;
 			};
 		};
 
-		d->d.attributes[d->h.nAttributes].size = j;
+		d->d[d->h.nAttributes].size = j;
 		goto success;
 	};
 fail:
@@ -933,29 +933,29 @@ static void *parseDevice(const char *line)
 		for (i=0; i<ret->h.nAttributes; i++)
 		{
 			printLen += sprintf(&verboseBuff[printLen], ".\n");
-			switch (ret->d.attributes[i].type)
+			switch (ret->d[i].type)
 			{
 			case ZUDI_DEVICE_ATTR_STRING:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tSTR %s: \"%s\"",
-					ret->d.attributes[i].name,
-					ret->d.attributes[i].value.string);
+					ret->d[i].name,
+					ret->d[i].value.string);
 
 				break;
 			case ZUDI_DEVICE_ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tARR %s: size %d: ",
-					ret->d.attributes[i].name,
-					ret->d.attributes[i].size);
+					ret->d[i].name,
+					ret->d[i].size);
 
-				for (j=0; j<ret->d.attributes[i].size; j++)
+				for (j=0; j<ret->d[i].size; j++)
 				{
 					printLen += sprintf(
 						&verboseBuff[printLen],
 						"%02X",
-						ret->d.attributes[i].value
+						ret->d[i].value
 							.array8[j]);
 				};
 
@@ -964,16 +964,16 @@ static void *parseDevice(const char *line)
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tBOOL %s: %d",
-					ret->d.attributes[i].name,
-					ret->d.attributes[i].value.boolval);
+					ret->d[i].name,
+					ret->d[i].value.boolval);
 
 				break;
 			case ZUDI_DEVICE_ATTR_UBIT32:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tU32 %s: 0x%x",
-					ret->d.attributes[i].name,
-					ret->d.attributes[i].value.unsigned32);
+					ret->d[i].name,
+					ret->d[i].value.unsigned32);
 
 				break;
 			};
@@ -1011,6 +1011,74 @@ static void *parseProvides(const char *line)
 	{
 		sprintf(verboseBuff, "PROVIDES (v0x%x): \"%s\"",
 			ret->version, ret->name);
+	};
+
+	return ret;
+PARSER_RELEASE_AND_EXIT(&ret);
+}
+
+static int parseRankAttribute(struct zudiIndexRankS *rank, const char *line)
+{
+	char		*white;
+
+	white = findWhitespaceAfter(line);
+	if (strlenUpToWhitespace(line, white) >= ZUDI_RANK_ATTRIB_NAME_MAXLEN)
+		{ return 0; };
+
+	strcpyUpToWhitespace(rank->d[rank->h.nAttributes].name, line, white);
+	return 1;
+}
+
+static void *parseRank(const char *line)
+{
+	struct zudiIndexRankS		*ret;
+	char				*tmp;
+	int				status, i, printLen=0;
+
+	PARSER_MALLOC(&ret, struct zudiIndexRankS);
+	ret->h.driverId = currentDriver->h.id;
+
+	line = skipWhitespaceIn(line);
+
+	ret->h.rank = strtoul(line, &tmp, 10);
+	// AFAICT, rank 0 is reserved.
+	if (ret->h.rank == 0) { goto releaseAndExit; };
+
+	tmp = findWhitespaceAfter(line);
+	// At least one attribute is required.
+	if (tmp == NULL || *tmp == '\0') { goto releaseAndExit; };
+	line = skipWhitespaceIn(tmp);
+
+	do
+	{
+		if (ret->h.nAttributes >= ZUDI_RANK_MAX_NATTRIBS)
+		{
+			fprintf(stderr, limitExceededMessage);
+			goto releaseAndExit;
+		};
+
+		status = parseRankAttribute(ret, line);
+		if (!status) { goto releaseAndExit; };
+		ret->h.nAttributes++;
+		line = findWhitespaceAfter(line);
+		if (line == NULL) { continue; };
+		line = skipWhitespaceIn(line);
+	} while (line != NULL && *line != '\0');
+
+	currentDriver->h.nRanks++;
+
+	if (verboseMode)
+	{
+		printLen += sprintf(
+			verboseBuff, "RANK %d: %d attribs",
+			ret->h.rank, ret->h.nAttributes);
+
+		for (i=0; i<ret->h.nAttributes; i++)
+		{
+			printLen += sprintf(
+				&verboseBuff[printLen], ".\n\tAttr: \"%s\"",
+				ret->d[i].name);
+		};
 	};
 
 	return ret;
@@ -1182,8 +1250,10 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 		};
 
 		// Does not seem like rank is supported by the spec anymore.
-		if (!strncmp(line, "rank", slen = strlen("rank")))
-			{ return LT_MISC; };
+		if (!strncmp(line, "rank", slen = strlen("rank"))) {
+			*ret = parseRank(&line[slen]);
+			return (*ret == NULL) ? LT_INVALID : LT_RANK;
+		};
 	};
 
 	return LT_UNKNOWN;

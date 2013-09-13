@@ -25,7 +25,7 @@ enum zudiIndexDeviceAttrTypeE {
 	ZUDI_DEVICE_ATTR_STRING=0, ZUDI_DEVICE_ATTR_UBIT32,
 	ZUDI_DEVICE_ATTR_BOOL, ZUDI_DEVICE_ATTR_ARRAY8 };
 
-#define ZUDI_DEVICE_MAX_NATTRIBUTES		(20)
+#define ZUDI_DEVICE_MAX_NATTRIBS		(20)
 #define ZUDI_DEVICE_ATTRIB_NAME_MAXLEN		(32)
 #define ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN		(64)
 struct zudiIndexDeviceS
@@ -37,23 +37,20 @@ struct zudiIndexDeviceS
 		uint16_t	messageIndex, metaIndex;
 		uint8_t		nAttributes;
 		uint32_t	dataFileOffset;
-	}h;
+	} h;
 
 	struct zudiIndexDeviceDataS
 	{
-		struct
+		uint8_t		type, size;
+		char		name[ZUDI_DEVICE_ATTRIB_NAME_MAXLEN];
+		union
 		{
-			uint8_t		type, size;
-			char		name[ZUDI_DEVICE_ATTRIB_NAME_MAXLEN];
-			union
-			{
-				char	string[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
-				uint8_t	array8[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
-				uint32_t	unsigned32;
-				uint8_t		boolval;
-			} value;
-		} attributes[ZUDI_DEVICE_MAX_NATTRIBUTES];
-	}d;
+			char	string[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+			uint8_t	array8[ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN];
+			uint32_t	unsigned32;
+			uint8_t		boolval;
+		} value;
+	} d[ZUDI_DEVICE_MAX_NATTRIBS];
 };
 
 #define ZUDI_DRIVER_MAX_NREQUIREMENTS		(16)
@@ -193,10 +190,20 @@ struct zudiIndexProvisionS
 	char		name[ZUDI_PROVISION_NAME_MAXLEN];
 };
 
+#define ZUDI_RANK_MAX_NATTRIBS		(ZUDI_DEVICE_MAX_NATTRIBS)
+#define ZUDI_RANK_ATTRIB_NAME_MAXLEN	(ZUDI_DEVICE_ATTRIB_NAME_MAXLEN)
 struct zudiIndexRankS
 {
-	uint32_t	driverId;
-	uint8_t		nAttributes, rank;
+	struct zudiIndexRankHeaderS
+	{
+		uint32_t	driverId;
+		uint8_t		nAttributes, rank;
+	} h;
+
+	struct zudiIndexRankDataS
+	{
+		char		name[ZUDI_RANK_ATTRIB_NAME_MAXLEN];
+	} d[ZUDI_RANK_MAX_NATTRIBS];
 };
 
 #endif

@@ -9,7 +9,7 @@ struct listElementS
 } *regionList=NULL, *deviceList=NULL,
 	*messageList=NULL, *disasterMessageList=NULL,
 	*messageFileList=NULL, *readableFileList=NULL,
-	/* *rankList=NULL,*/ *provisionList=NULL;
+	*rankList=NULL, *provisionList=NULL;
 
 static int list_insert(struct listElementS **list, void *item)
 {
@@ -81,8 +81,8 @@ int index_insert(enum parser_lineTypeE lineType, void *obj)
 	case LT_READABLE_FILE:
 		return list_insert(&readableFileList, obj);
 
-	/*case LT_RANK:
-		return list_insert(&rankList, obj);*/
+	case LT_RANK:
+		return list_insert(&rankList, obj);
 
 	case LT_PROVIDES:
 		return list_insert(&provisionList, obj);
@@ -101,7 +101,7 @@ void index_free(void)
 	list_free(&disasterMessageList);
 	list_free(&messageFileList);
 	list_free(&readableFileList);
-	// list_free(&rankList);
+	list_free(&rankList);
 	list_free(&provisionList);
 }
 
@@ -296,8 +296,8 @@ int index_writeDevices(void)
 		for (i=0; i<dev->h.nAttributes; i++)
 		{
 			if (fwrite(
-				&dev->d.attributes[i],
-				sizeof(dev->d.attributes[i]), 1, dFile) < 1)
+				&dev->d[i],
+				sizeof(dev->d[i]), 1, dFile) < 1)
 			{
 				fprintf(stderr, "Error: Failed to write out "
 					"device attribute.\n");
@@ -354,10 +354,61 @@ static int index_writeListToDisk(
 	return EX_SUCCESS;
 }
 
+static int index_writeRanks(uint32_t *fileOffset)
+{
+	struct listElementS		*tmp;
+	struct zudiIndexRankS		*item;
+	FILE				*rFile;
+	char				*fullName=NULL;
+	int				i;
+
+	fullName = makeFullName(fullName, indexPath, "ranks.zudi-index");
+	if (fullName == NULL)
+	{
+		fprintf(stderr, "Error: Nomem in makeFullName for ranks index.\n");
+		return EX_NOMEM;
+	};
+
+	rFile = fopen(fullName, "a");
+	if (rFile == NULL)
+	{
+		fprintf(stderr, "Error: Failed to open ranks index.\n");
+		return EX_FILE_OPEN;
+	};
+
+	*fileOffset = ftell(rFile);
+
+	for (tmp = rankList; tmp != NULL; tmp = tmp->next)
+	{
+		item = tmp->item;
+
+		if (fwrite(&item->h, sizeof(item->h), 1, rFile) < 1)
+		{
+			fclose(rFile);
+			fprintf(stderr, "Error: Failed to write rank header.\n");
+			return EX_FILE_IO;
+		};
+
+		for (i=0; i<item->h.nAttributes; i++)
+		{
+			if (fwrite(&item->d[i], sizeof(item->d[i]), 1, rFile)
+				< 1)
+			{
+				fclose(rFile);
+				fprintf(stderr, "Error: Failed to write rank attribute.\n");
+				return EX_FILE_IO;
+			};
+		};
+	};
+
+	fclose(rFile);
+	return EX_SUCCESS;
+}
+
 int index_writeToDisk(void)
 {
 	int		ret;
-	uint32_t	fileOffset;
+	uint32_t	driverDataFileOffset, rankFileOffset;
 	/* 1. Read the index header and get the endianness of the index.
 	 * 2. Find the next driver ID.
 	 * 3. Write the driver to the index at the end in append mode.
@@ -366,13 +417,16 @@ int index_writeToDisk(void)
 	 * 6. Write the device data to the idnex in append mode.
 	 * 7. FOR EACH index: write its data out.
 	 **/
-	if ((ret = index_writeDriverData(&fileOffset)) != EX_SUCCESS)
+	if ((ret = index_writeDriverData(&driverDataFileOffset)) != EX_SUCCESS)
 		{ return ret; };
 
-	parser_getCurrentDriverState()->h.dataFileOffset = fileOffset;
+	if ((ret = index_writeRanks(&rankFileOffset)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.dataFileOffset = driverDataFileOffset;
+	parser_getCurrentDriverState()->h.rankFileOffset = rankFileOffset;
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeDevices()) != EX_SUCCESS) { return ret; };
-
 	if ((ret = index_writeListToDisk(
 		regionList, "regions.zudi-index",
 		sizeof(struct zudiIndexRegionS))) != EX_SUCCESS)
