@@ -193,5 +193,11 @@ struct zudiIndexProvisionS
 	char		name[ZUDI_PROVISION_NAME_MAXLEN];
 };
 
+struct zudiIndexRankS
+{
+	uint32_t	driverId;
+	uint8_t		nAttributes, rank;
+};
+
 #endif
 

@@ -891,7 +891,6 @@ fail:
 
 success:
 	*status = 1;
-	d->h.nAttributes++;
 	return line + retOffset;
 }
 
@@ -918,6 +917,7 @@ static void *parseDevice(const char *line)
 		{
 			line = parseDeviceAttribute(ret, line, &status);
 			if (status == 0) { goto releaseAndExit; };
+			ret->h.nAttributes++;
 			line = skipWhitespaceIn(line);
 		} while (*line != '\0');
 	};

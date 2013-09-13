@@ -256,26 +256,27 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	return EX_SUCCESS;
 }
 
-int index_writeDeviceHeaders(void)
+int index_writeDevices(void)
 {
 	struct listElementS		*tmp;
 	struct zudiIndexDeviceS		*dev;
-	FILE				*dhFile;
+	FILE				*dFile;
 	char				*fullName=NULL;
+	int				i;
 
 	fullName = makeFullName(
-		fullName, indexPath, "device-headers.zudi-index");
+		fullName, indexPath, "devices.zudi-index");
 
 	if (fullName == NULL)
 	{
-		fprintf(stderr, "Error: Nomem in makeFullName for device-headers index.\n");
+		fprintf(stderr, "Error: Nomem in makeFullName for devices index.\n");
 		return EX_NOMEM;
 	};
 
-	dhFile = fopen(fullName, "a");
-	if (dhFile == NULL)
+	dFile = fopen(fullName, "a");
+	if (dFile == NULL)
 	{
-		fprintf(stderr, "Error: Failed to open device-headers index.\n");
+		fprintf(stderr, "Error: Failed to open devices index.\n");
 		return EX_FILE_OPEN;
 	};
 
@@ -284,63 +285,30 @@ int index_writeDeviceHeaders(void)
 		dev = tmp->item;
 
 		// Write the device header out.
-		if (fwrite(&dev->h, sizeof(dev->h), 1, dhFile) != 1)
+		if (fwrite(&dev->h, sizeof(dev->h), 1, dFile) < 1)
 		{
 			fprintf(stderr, "Error: failed to write out device header.\n");
-			fclose(dhFile);
+			fclose(dFile);
 			return EX_FILE_IO;
 		};
-	};
 
-	fclose(dhFile);
-	return EX_SUCCESS;
-}
-
-static int index_writeDeviceData(void)
-{
-	struct listElementS		*tmp;
-	struct zudiIndexDeviceS		*dev;
-	FILE				*ddFile;
-	char				*fullName=NULL;
-	int				i;
-
-	fullName = makeFullName(fullName, indexPath, "device-data.zudi-index");
-
-	if (fullName == NULL)
-	{
-		fprintf(stderr, "Error: Nomem in makeFullName for device-data index.\n");
-		return EX_NOMEM;
-	};
-
-	ddFile = fopen(fullName, "a");
-	if (ddFile == NULL)
-	{
-		fprintf(stderr, "Error: Failed to open device-data index.\n");
-		return EX_FILE_OPEN;
-	};
-
-	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
-	{
-		dev = tmp->item;
-
+		// And write the device data immediately following it.
 		for (i=0; i<dev->h.nAttributes; i++)
 		{
 			if (fwrite(
 				&dev->d.attributes[i],
-				sizeof(dev->d.attributes[i]),
-				1, ddFile)
-				!= 1)
+				sizeof(dev->d.attributes[i]), 1, dFile) < 1)
 			{
 				fprintf(stderr, "Error: Failed to write out "
 					"device attribute.\n");
 
-				fclose(ddFile);
+				fclose(dFile);
 				return EX_FILE_IO;
 			};
 		};
 	};
 
-	fclose(ddFile);
+	fclose(dFile);
 	return EX_SUCCESS;
 }
 
@@ -403,8 +371,7 @@ int index_writeToDisk(void)
 
 	parser_getCurrentDriverState()->h.dataFileOffset = fileOffset;
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
-	if ((ret = index_writeDeviceHeaders()) != EX_SUCCESS) { return ret; };
-	if ((ret = index_writeDeviceData()) != EX_SUCCESS) { return ret; };
+	if ((ret = index_writeDevices()) != EX_SUCCESS) { return ret; };
 
 	if ((ret = index_writeListToDisk(
 		regionList, "regions.zudi-index",

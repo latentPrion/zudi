@@ -211,7 +211,7 @@ char *makeFullName(
 const char		*indexFileNames[] =
 {
 	"driver-headers.zudi-index", "driver-data.zudi-index",
-	"device-headers.zudi-index", "device-data.zudi-index",
+	"devices.zudi-index",
 	"message-files.zudi-index", "readable-files.zudi-index",
 	"regions.zudi-index",
 	"messages.zudi-index", "disaster-messages.zudi-index",

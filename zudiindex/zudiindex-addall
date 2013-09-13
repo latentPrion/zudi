@@ -26,7 +26,7 @@ fi
 
 if [ "$1" = "-drivers" ]
 then
-	for i in "$files"; do
+	for i in $files; do
 		if [ -n "$indexDir" ]
 		then zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath -i "$indexDir"
 		else zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath
