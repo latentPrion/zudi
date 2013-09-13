@@ -601,7 +601,7 @@ static int addMode(int argc, char **argv)
 	if (ret != EX_SUCCESS)
 	{
 		exit(printAndReturn(
-			argv[0], "Error: Failed to parse stage returned error",
+			argv[0], "Error: Parse stage returned error",
 			ret));
 	};
 
