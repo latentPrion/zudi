@@ -86,7 +86,8 @@ struct zudiIndexDriverS
 		/* dataFileOffset is the offset within driver-data.zudi-index.
 		 * rankFileOffset is the offset within ranks.zudi-index.
 		 **/
-		uint32_t	dataFileOffset, rankFileOffset;
+		uint32_t	dataFileOffset, rankFileOffset,
+				deviceFileOffset;
 		uint8_t		nMetalanguages, nChildBops, nParentBops,
 				nInternalBops,
 				nModules, nRequirements,

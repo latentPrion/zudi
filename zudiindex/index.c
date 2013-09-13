@@ -256,7 +256,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	return EX_SUCCESS;
 }
 
-int index_writeDevices(void)
+int index_writeDevices(uint32_t *offset)
 {
 	struct listElementS		*tmp;
 	struct zudiIndexDeviceS		*dev;
@@ -279,6 +279,8 @@ int index_writeDevices(void)
 		fprintf(stderr, "Error: Failed to open devices index.\n");
 		return EX_FILE_OPEN;
 	};
+
+	*offset = ftell(dFile);
 
 	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
 	{
@@ -408,7 +410,7 @@ static int index_writeRanks(uint32_t *fileOffset)
 int index_writeToDisk(void)
 {
 	int		ret;
-	uint32_t	driverDataFileOffset, rankFileOffset;
+	uint32_t	driverDataFileOffset, rankFileOffset, deviceFileOffset;
 	/* 1. Read the index header and get the endianness of the index.
 	 * 2. Find the next driver ID.
 	 * 3. Write the driver to the index at the end in append mode.
@@ -423,10 +425,14 @@ int index_writeToDisk(void)
 	if ((ret = index_writeRanks(&rankFileOffset)) != EX_SUCCESS)
 		{ return ret; };
 
+	if ((ret = index_writeDevices(&deviceFileOffset)) != EX_SUCCESS)
+		{ return ret; };
+
 	parser_getCurrentDriverState()->h.dataFileOffset = driverDataFileOffset;
 	parser_getCurrentDriverState()->h.rankFileOffset = rankFileOffset;
+	parser_getCurrentDriverState()->h.deviceFileOffset = deviceFileOffset;
+
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
-	if ((ret = index_writeDevices()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeListToDisk(
 		regionList, "regions.zudi-index",
 		sizeof(struct zudiIndexRegionS))) != EX_SUCCESS)
