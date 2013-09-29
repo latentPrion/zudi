@@ -9,7 +9,7 @@
  * one driver at a time), so we can just keep a single global pointer and
  * allocate memory for it on each new call to parser_initializeNewDriver().
  **/
-struct zudiIndexDriverS		*currentDriver=NULL;
+struct zudiIndex_driverS	*currentDriver=NULL;
 const char			*limitExceededMessage=
 	"Limit exceeded for entity";
 
@@ -44,7 +44,7 @@ int parser_initializeNewDriverState(uint16_t driverId)
 	return 1;
 }
 
-struct zudiIndexDriverS *parser_getCurrentDriverState(void)
+struct zudiIndex_driverS *parser_getCurrentDriverState(void)
 {
 	return currentDriver;
 }
@@ -115,10 +115,10 @@ static inline int hasSlashes(const char *str)
 
 static void *parseMessage(const char *line)
 {
-	struct zudiIndexMessageS	*ret;
+	struct zudiIndex_messageS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndexMessageS);
+	PARSER_MALLOC(&ret, struct zudiIndex_messageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -145,10 +145,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseDisasterMessage(const char *line)
 {
-	struct zudiIndexDisasterMessageS	*ret;
-	char				*tmp;
+	struct zudiIndex_disasterMessageS	*ret;
+	char					*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndexDisasterMessageS);
+	PARSER_MALLOC(&ret, struct zudiIndex_disasterMessageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -175,9 +175,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseMessageFile(const char *line)
 {
-	struct zudiIndexMessageFileS	*ret;
+	struct zudiIndex_messageFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudiIndexMessageFileS);
+	PARSER_MALLOC(&ret, struct zudiIndex_messageFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -198,9 +198,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseReadableFile(const char *line)
 {
-	struct zudiIndexReadableFileS	*ret;
+	struct zudiIndex_readableFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudiIndexReadableFileS);
+	PARSER_MALLOC(&ret, struct zudiIndex_readableFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -619,7 +619,7 @@ static int parseModule(const char *line)
 }
 
 static const char *parseRegionAttribute(
-	struct zudiIndexRegionS *r, const char *line, int *status
+	struct zudiIndex_regionS *r, const char *line, int *status
 	)
 {
 	char			*white;
@@ -714,11 +714,11 @@ fail:
 
 static void *parseRegion(const char *line)
 {
-	struct zudiIndexRegionS		*ret;
+	struct zudiIndex_regionS	*ret;
 	char				*tmp;
 	int				status;
 
-	PARSER_MALLOC(&ret, struct zudiIndexRegionS);
+	PARSER_MALLOC(&ret, struct zudiIndex_regionS);
 	line = skipWhitespaceIn(line);
 
 	ret->driverId = currentDriver->h.id;
@@ -782,7 +782,7 @@ static uint8_t getDigit(const char c)
 }
 
 static const char *parseDeviceAttribute(
-	struct zudiIndexDeviceS *d, const char *line, int *status
+	struct zudiIndex_deviceS *d, const char *line, int *status
 	)
 {
 	char		*white;
@@ -896,11 +896,11 @@ success:
 
 static void *parseDevice(const char *line)
 {
-	struct zudiIndexDeviceS		*ret;
+	struct zudiIndex_deviceS	*ret;
 	char				*tmp;
 	int				status, i, j, printLen;
 
-	PARSER_MALLOC(&ret, struct zudiIndexDeviceS);
+	PARSER_MALLOC(&ret, struct zudiIndex_deviceS);
 	ret->h.index = currentDriver->h.nDevices;
 	line = skipWhitespaceIn(line);
 	ret->h.messageIndex = strtoul(line, &tmp, 10);
@@ -987,10 +987,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseProvides(const char *line)
 {
-	struct zudiIndexProvisionS	*ret;
+	struct zudiIndex_provisionS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndexProvisionS);
+	PARSER_MALLOC(&ret, struct zudiIndex_provisionS);
 
 	line = skipWhitespaceIn(line);
 	tmp = findWhitespaceAfter(line);
@@ -1017,7 +1017,7 @@ static void *parseProvides(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
-static int parseRankAttribute(struct zudiIndexRankS *rank, const char *line)
+static int parseRankAttribute(struct zudiIndex_rankS *rank, const char *line)
 {
 	char		*white;
 
@@ -1031,11 +1031,11 @@ static int parseRankAttribute(struct zudiIndexRankS *rank, const char *line)
 
 static void *parseRank(const char *line)
 {
-	struct zudiIndexRankS		*ret;
+	struct zudiIndex_rankS		*ret;
 	char				*tmp;
 	int				status, i, printLen=0;
 
-	PARSER_MALLOC(&ret, struct zudiIndexRankS);
+	PARSER_MALLOC(&ret, struct zudiIndex_rankS);
 	ret->h.driverId = currentDriver->h.id;
 
 	line = skipWhitespaceIn(line);

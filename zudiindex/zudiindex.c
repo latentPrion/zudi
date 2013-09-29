@@ -225,7 +225,7 @@ static int createMode(int argc, char **argv)
 	FILE				*currFile;
 	char				*fullName=NULL;
 	int				i, blocksWritten;
-	struct zudiIndexHeaderS		*indexHeader;
+	struct zudiIndex_headerS		*indexHeader;
 	(void)argc; (void)argv;
 
 	/**	EXPLANATION:
@@ -478,7 +478,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 int incrementNRecords(void)
 {
 	FILE				*dhFile;
-	struct zudiIndexHeaderS		*header;
+	struct zudiIndex_headerS		*header;
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
@@ -519,7 +519,7 @@ int incrementNRecords(void)
 
 static int getNextDriverId(uint32_t *driverId)
 {
-	struct zudiIndexHeaderS		*driverHeader;
+	struct zudiIndex_headerS		*driverHeader;
 	FILE				*driverHeaderIndex;
 	char				*fullName=NULL;
 
@@ -659,11 +659,11 @@ int main(int argc, char **argv)
 			"\tdriver header record %zi.\n"
 			"\tregion record %zi.\n"
 			"\tmessage record %zi.\n",
-			sizeof(struct zudiIndexHeaderS),
-			sizeof(struct zudiIndexDeviceHeaderS),
-			sizeof(struct zudiIndexDriverHeaderS),
-			sizeof(struct zudiIndexRegionS),
-			sizeof(struct zudiIndexMessageS));
+			sizeof(struct zudiIndex_headerS),
+			sizeof(struct zudiIndex_deviceHeaderS),
+			sizeof(struct zudiIndex_driverHeaderS),
+			sizeof(struct zudiIndex_regionS),
+			sizeof(struct zudiIndex_messageS));
 
 		exit(EXIT_SUCCESS);
 	};

@@ -39,7 +39,7 @@ enum parser_lineTypeE {
 	LT_METALANGUAGE, LT_READABLE_FILE, LT_RANK, LT_PROVIDES };
 
 int parser_initializeNewDriverState(uint16_t driverId);
-struct zudiIndexDriverS *parser_getCurrentDriverState(void);
+struct zudiIndex_driverS *parser_getCurrentDriverState(void);
 void parser_releaseState(void);
 
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret);

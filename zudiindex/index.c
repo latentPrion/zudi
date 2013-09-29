@@ -107,9 +107,9 @@ void index_free(void)
 
 static int index_writeDriverHeader(void)
 {
-	FILE			*dhFile;
-	char			*fullName=NULL;
-	struct zudiIndexDriverS	*dStruct;
+	FILE				*dhFile;
+	char				*fullName=NULL;
+	struct zudiIndex_driverS	*dStruct;
 
 	fullName = makeFullName(
 		fullName, indexPath, "driver-headers.zudi-index");
@@ -138,10 +138,10 @@ static int index_writeDriverHeader(void)
 
 static int index_writeDriverData(uint32_t *fileOffset)
 {
-	FILE			*ddFile;
-	int			i;
-	struct zudiIndexDriverS	*dStruct;
-	char			*fullName=NULL;
+	FILE				*ddFile;
+	int				i;
+	struct zudiIndex_driverS	*dStruct;
+	char				*fullName=NULL;
 
 	fullName = makeFullName(fullName, indexPath, "driver-data.zudi-index");
 	if (fullName == NULL)
@@ -161,6 +161,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	*fileOffset = ftell(ddFile);
 	dStruct = parser_getCurrentDriverState();
 
+	dStruct->h.modulesOffset = ftell(ddFile);
 	// First write out the modules.
 	for (i=0; i<dStruct->h.nModules; i++)
 	{
@@ -176,6 +177,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	dStruct->h.requirementsOffset = ftell(ddFile);
 	// Then write out the requirements.
 	for (i=0; i<dStruct->h.nRequirements; i++)
 	{
@@ -191,6 +193,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	dStruct->h.metalanguagesOffset = ftell(ddFile);
 	// Then write out the metalanguage indexes.
 	for (i=0; i<dStruct->h.nMetalanguages; i++)
 	{
@@ -206,6 +209,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	dStruct->h.parentBopsOffset = ftell(ddFile);
 	// Then write out the parent bops.
 	for (i=0; i<dStruct->h.nParentBops; i++)
 	{
@@ -221,6 +225,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	dStruct->h.childBopsOffset = ftell(ddFile);
 	// Then write out the child bops.
 	for (i=0; i<dStruct->h.nChildBops; i++)
 	{
@@ -236,6 +241,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	dStruct->h.internalBopsOffset = ftell(ddFile);
 	// Then write out the internal bops.
 	for (i=0; i<dStruct->h.nInternalBops; i++)
 	{
@@ -259,7 +265,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 int index_writeDevices(uint32_t *offset)
 {
 	struct listElementS		*tmp;
-	struct zudiIndexDeviceS		*dev;
+	struct zudiIndex_deviceS	*dev;
 	FILE				*dFile;
 	char				*fullName=NULL;
 	int				i;
@@ -359,7 +365,7 @@ static int index_writeListToDisk(
 static int index_writeRanks(uint32_t *fileOffset)
 {
 	struct listElementS		*tmp;
-	struct zudiIndexRankS		*item;
+	struct zudiIndex_rankS		*item;
 	FILE				*rFile;
 	char				*fullName=NULL;
 	int				i;
@@ -435,32 +441,32 @@ int index_writeToDisk(void)
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeListToDisk(
 		regionList, "regions.zudi-index",
-		sizeof(struct zudiIndexRegionS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_regionS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		messageList, "messages.zudi-index",
-		sizeof(struct zudiIndexMessageS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_messageS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		disasterMessageList, "disaster-messages.zudi-index",
-		sizeof(struct zudiIndexDisasterMessageS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_disasterMessageS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		messageFileList, "message-files.zudi-index",
-		sizeof(struct zudiIndexMessageFileS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_messageFileS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		readableFileList, "readable-files.zudi-index",
-		sizeof(struct zudiIndexReadableFileS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_readableFileS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		provisionList, "provisions.zudi-index",
-		sizeof(struct zudiIndexProvisionS))) != EX_SUCCESS)
+		sizeof(struct zudiIndex_provisionS))) != EX_SUCCESS)
 		{ return ret; };
 
 	return EX_SUCCESS;
