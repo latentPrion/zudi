@@ -27,7 +27,7 @@ struct zudiIndex_deviceHeaderS
 	uint16_t	index;
 	uint16_t	messageIndex, metaIndex;
 	uint8_t		nAttributes;
-	uint32_t	dataFileOffset;
+	// uint32_t	dataFileOffset;
 };
 
 enum zudiIndex_deviceAttrTypeE {

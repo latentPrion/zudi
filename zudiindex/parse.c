@@ -980,6 +980,7 @@ static void *parseDevice(const char *line)
 		};
 	};
 
+	ret->h.driverId = currentDriver->h.id;
 	currentDriver->h.nDevices++;
 	return ret;
 PARSER_RELEASE_AND_EXIT(&ret);
