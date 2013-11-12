@@ -18,7 +18,7 @@ static int list_insert(struct listElementS **list, void *item)
 	// If empty list, allocate a first element.
 	if (*list == NULL)
 	{
-		*list = malloc(sizeof(**list));
+		*list = new listElementS;
 		if (*list == NULL) { return EX_NOMEM; };
 		(*list)->next = NULL;
 		(*list)->item = item;
@@ -26,7 +26,7 @@ static int list_insert(struct listElementS **list, void *item)
 	};
 
 	// Else just add it at the front.
-	tmp = malloc(sizeof(*tmp));
+	tmp = new listElementS;
 	if (tmp == NULL) { return EX_NOMEM; };
 	tmp->next = *list;
 	tmp->item = item;
@@ -109,7 +109,7 @@ static int index_writeDriverHeader(void)
 {
 	FILE				*dhFile;
 	char				*fullName=NULL;
-	struct zudiIndex_driverS	*dStruct;
+	struct zudi::driver::driverS	*dStruct;
 
 	fullName = makeFullName(
 		fullName, indexPath, "driver-headers.zudi-index");
@@ -140,7 +140,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 {
 	FILE				*ddFile;
 	int				i;
-	struct zudiIndex_driverS	*dStruct;
+	struct zudi::driver::driverS	*dStruct;
 	char				*fullName=NULL;
 
 	fullName = makeFullName(fullName, indexPath, "driver-data.zudi-index");
@@ -166,8 +166,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nModules; i++)
 	{
 		if (fwrite(
-			&dStruct->d.modules[i],
-			sizeof(dStruct->d.modules[i]),
+			&dStruct->modules[i],
+			sizeof(dStruct->modules[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -182,8 +182,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nRequirements; i++)
 	{
 		if (fwrite(
-			&dStruct->d.requirements[i],
-			sizeof(dStruct->d.requirements[i]),
+			&dStruct->requirements[i],
+			sizeof(dStruct->requirements[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -198,8 +198,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nMetalanguages; i++)
 	{
 		if (fwrite(
-			&dStruct->d.metalanguages[i],
-			sizeof(dStruct->d.metalanguages[i]),
+			&dStruct->metalanguages[i],
+			sizeof(dStruct->metalanguages[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -214,8 +214,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nParentBops; i++)
 	{
 		if (fwrite(
-			&dStruct->d.parentBops[i],
-			sizeof(dStruct->d.parentBops[i]),
+			&dStruct->parentBops[i],
+			sizeof(dStruct->parentBops[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -230,8 +230,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nChildBops; i++)
 	{
 		if (fwrite(
-			&dStruct->d.childBops[i],
-			sizeof(dStruct->d.childBops[i]),
+			&dStruct->childBops[i],
+			sizeof(dStruct->childBops[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -246,8 +246,8 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	for (i=0; i<dStruct->h.nInternalBops; i++)
 	{
 		if (fwrite(
-			&dStruct->d.internalBops[i],
-			sizeof(dStruct->d.internalBops[i]),
+			&dStruct->internalBops[i],
+			sizeof(dStruct->internalBops[i]),
 			1, ddFile)
 			!= 1)
 		{
@@ -265,7 +265,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 int index_writeDevices(uint32_t *offset)
 {
 	struct listElementS		*tmp;
-	struct zudiIndex_deviceS	*dev;
+	struct zudi::device::deviceS	*dev;
 	FILE				*dFile;
 	char				*fullName=NULL;
 	int				i;
@@ -290,7 +290,7 @@ int index_writeDevices(uint32_t *offset)
 
 	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
 	{
-		dev = tmp->item;
+		dev = (zudi::device::deviceS *)tmp->item;
 
 		// Write the device header out.
 		if (fwrite(&dev->h, sizeof(dev->h), 1, dFile) < 1)
@@ -365,7 +365,7 @@ static int index_writeListToDisk(
 static int index_writeRanks(uint32_t *fileOffset)
 {
 	struct listElementS		*tmp;
-	struct zudiIndex_rankS		*item;
+	struct zudi::rank::rankS	*item;
 	FILE				*rFile;
 	char				*fullName=NULL;
 	int				i;
@@ -388,7 +388,7 @@ static int index_writeRanks(uint32_t *fileOffset)
 
 	for (tmp = rankList; tmp != NULL; tmp = tmp->next)
 	{
-		item = tmp->item;
+		item = (zudi::rank::rankS *)tmp->item;
 
 		if (fwrite(&item->h, sizeof(item->h), 1, rFile) < 1)
 		{
@@ -441,32 +441,32 @@ int index_writeToDisk(void)
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
 	if ((ret = index_writeListToDisk(
 		regionList, "regions.zudi-index",
-		sizeof(struct zudiIndex_regionS))) != EX_SUCCESS)
+		sizeof(struct zudi::regionS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		messageList, "messages.zudi-index",
-		sizeof(struct zudiIndex_messageS))) != EX_SUCCESS)
+		sizeof(struct zudi::messageS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		disasterMessageList, "disaster-messages.zudi-index",
-		sizeof(struct zudiIndex_disasterMessageS))) != EX_SUCCESS)
+		sizeof(struct zudi::disasterMessageS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		messageFileList, "message-files.zudi-index",
-		sizeof(struct zudiIndex_messageFileS))) != EX_SUCCESS)
+		sizeof(struct zudi::messageFileS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		readableFileList, "readable-files.zudi-index",
-		sizeof(struct zudiIndex_readableFileS))) != EX_SUCCESS)
+		sizeof(struct zudi::readableFileS))) != EX_SUCCESS)
 		{ return ret; };
 
 	if ((ret = index_writeListToDisk(
 		provisionList, "provisions.zudi-index",
-		sizeof(struct zudiIndex_provisionS))) != EX_SUCCESS)
+		sizeof(struct zudi::provisionS))) != EX_SUCCESS)
 		{ return ret; };
 
 	return EX_SUCCESS;

@@ -48,7 +48,7 @@ enum propsTypeE		propsType=DRIVER_PROPS;
 int			hasRequiresUdi=0, hasRequiresUdiPhysio=0, verboseMode=0,
 			ignoreInvalidBasePath=0;
 
-char			*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
+const char		*indexPath=NULL, *basePath=NULL, *inputFileName=NULL;
 char			propsLineBuffMem[515];
 char			verboseBuff[1024];
 
@@ -199,7 +199,7 @@ char *makeFullName(
 	int		pathLen;
 
 	pathLen = strlen(indexPath);
-	ret = realloc(reallocMem, pathLen + strlen(fileName) + 2);
+	ret = (char *)realloc(reallocMem, pathLen + strlen(fileName) + 2);
 	if (ret == NULL) { return NULL; };
 
 	strcpy(ret, indexPath);
@@ -225,7 +225,7 @@ static int createMode(int argc, char **argv)
 	FILE				*currFile;
 	char				*fullName=NULL;
 	int				i, blocksWritten;
-	struct zudiIndex_headerS		*indexHeader;
+	struct zudi::headerS		*indexHeader;
 	(void)argc; (void)argv;
 
 	/**	EXPLANATION:
@@ -241,7 +241,7 @@ static int createMode(int argc, char **argv)
 	};
 
 	// Allocate and fill in the index header.
-	indexHeader = malloc(sizeof(*indexHeader));
+	indexHeader = (zudi::headerS *)malloc(sizeof(*indexHeader));
 	if (indexHeader == NULL) { return EX_NOMEM; };
 	memset(indexHeader, 0, sizeof(*indexHeader));
 
@@ -301,7 +301,7 @@ static int binaryParse(FILE *propsFile, char *propsLineBuff)
 	return EXIT_SUCCESS;
 }
 
-char		*lineTypeStrings[] =
+const char		*lineTypeStrings[] =
 {
 	"UNKNOWN", "INVALID", "OVERFLOW", "LIMIT_EXCEEDED", "MISC",
 	"DRIVER", "MODULE", "REGION", "DEVICE",
@@ -478,7 +478,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 int incrementNRecords(void)
 {
 	FILE				*dhFile;
-	struct zudiIndex_headerS		*header;
+	struct zudi::headerS		*header;
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
@@ -486,7 +486,7 @@ int incrementNRecords(void)
 
 	if (fullName == NULL) { return EX_NOMEM; };
 
-	header = malloc(sizeof(*header));
+	header = new zudi::headerS;
 	if (header == NULL) { return EX_NOMEM; };
 
 	dhFile = fopen(fullName, "r+");
@@ -519,7 +519,7 @@ int incrementNRecords(void)
 
 static int getNextDriverId(uint32_t *driverId)
 {
-	struct zudiIndex_headerS		*driverHeader;
+	struct zudi::headerS		*driverHeader;
 	FILE				*driverHeaderIndex;
 	char				*fullName=NULL;
 
@@ -528,7 +528,7 @@ static int getNextDriverId(uint32_t *driverId)
 
 	if (fullName == NULL) { return 0; };
 
-	driverHeader = malloc(sizeof(*driverHeader));
+	driverHeader = new zudi::headerS;
 	if (driverHeader == NULL) { return 0; };
 
 	driverHeaderIndex = fopen(fullName, "r+");
@@ -631,14 +631,14 @@ static int addMode(int argc, char **argv)
 
 static struct stat		dirStat;
 
-int fileExists(char *path)
+int fileExists(const char *path)
 {
 	if (stat(path, &dirStat) != 0) { return 0; };
 	if (!S_ISREG(dirStat.st_mode)) { return 0; };
 	return 1;
 }
 
-int folderExists(char *path)
+int folderExists(const char *path)
 {
 	if (stat(path, &dirStat) != 0) { return 0; };
 	if (!S_ISDIR(dirStat.st_mode)) { return 0; };
@@ -659,11 +659,11 @@ int main(int argc, char **argv)
 			"\tdriver header record %zi.\n"
 			"\tregion record %zi.\n"
 			"\tmessage record %zi.\n",
-			sizeof(struct zudiIndex_headerS),
-			sizeof(struct zudiIndex_deviceHeaderS),
-			sizeof(struct zudiIndex_driverHeaderS),
-			sizeof(struct zudiIndex_regionS),
-			sizeof(struct zudiIndex_messageS));
+			sizeof(struct zudi::headerS),
+			sizeof(struct zudi::device::headerS),
+			sizeof(struct zudi::driver::headerS),
+			sizeof(struct zudi::regionS),
+			sizeof(struct zudi::messageS));
 
 		exit(EXIT_SUCCESS);
 	};

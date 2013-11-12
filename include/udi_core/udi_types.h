@@ -91,7 +91,6 @@
 #error "udi_types.h must not be #included directly; use udi.h instead."
 #endif
 
-#include <config.h>
 #include <stdint.h>
 #include <stddef.h>
 

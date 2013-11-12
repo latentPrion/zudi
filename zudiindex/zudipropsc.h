@@ -22,7 +22,8 @@ extern enum programModeE	programMode;
 extern enum propsTypeE		propsType;
 extern int			hasRequiresUdi, hasRequiresUdiPhysio,
 				verboseMode;
-extern char			verboseBuff[], *basePath, *indexPath;
+extern const char		*basePath, *indexPath;
+extern char			verboseBuff[];
 
 char *makeFullName(char *reallocMem, const char *path, const char *fileName);
 inline static int printAndReturn(char *progname, const char *msg, int errcode)
@@ -39,7 +40,7 @@ enum parser_lineTypeE {
 	LT_METALANGUAGE, LT_READABLE_FILE, LT_RANK, LT_PROVIDES };
 
 int parser_initializeNewDriverState(uint16_t driverId);
-struct zudiIndex_driverS *parser_getCurrentDriverState(void);
+struct zudi::driver::driverS *parser_getCurrentDriverState(void);
 void parser_releaseState(void);
 
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret);

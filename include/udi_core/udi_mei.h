@@ -93,7 +93,7 @@ typedef void udi_mei_backend_stub_t(
  * op template structure
  */
 
-typedef const struct {
+typedef const struct _udi_mei_op_template {
 	const char 			*op_name;
 	udi_ubit8_t			op_category;
 	udi_ubit8_t			op_flags;
@@ -126,7 +126,7 @@ typedef const struct {
 /*
  * Metalanguage ops vector template
  */
-typedef const struct {
+typedef const struct _udi_mei_ops_vec_template {
 	udi_index_t meta_ops_num;
 	udi_ubit8_t relationship;
 	udi_mei_op_template_t * op_template_list;
@@ -135,7 +135,7 @@ typedef const struct {
 /* 
  * Metalanguage initialization structure
  */
-typedef const struct {
+typedef const struct _udi_mei_init {
 	udi_mei_ops_vec_template_t * ops_vec_template_list;
 } udi_mei_init_t;
 

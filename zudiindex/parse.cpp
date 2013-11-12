@@ -9,7 +9,7 @@
  * one driver at a time), so we can just keep a single global pointer and
  * allocate memory for it on each new call to parser_initializeNewDriver().
  **/
-struct zudiIndex_driverS	*currentDriver=NULL;
+struct zudi::driver::driverS	*currentDriver=NULL;
 const char			*limitExceededMessage=
 	"Limit exceeded for entity";
 
@@ -29,22 +29,22 @@ int parser_initializeNewDriverState(uint16_t driverId)
 		currentDriver = NULL;
 	};
 
-	currentDriver = malloc(sizeof(*currentDriver));
+	currentDriver = new zudi::driver::driverS;
 	if (currentDriver == NULL) { return 0; };
 
 	memset(currentDriver, 0, sizeof(*currentDriver));
 	currentDriver->h.id = driverId;
 	strcpy(currentDriver->h.basePath, basePath);
 	if (propsType == META_PROPS) {
-		currentDriver->h.type = DRIVERTYPE_METALANGUAGE;
+		currentDriver->h.type = zudi::driver::DRIVERTYPE_METALANGUAGE;
 	} else {
-		currentDriver->h.type = DRIVERTYPE_DRIVER;
+		currentDriver->h.type = zudi::driver::DRIVERTYPE_DRIVER;
 	};
 
 	return 1;
 }
 
-struct zudiIndex_driverS *parser_getCurrentDriverState(void)
+struct zudi::driver::driverS *parser_getCurrentDriverState(void)
 {
 	return currentDriver;
 }
@@ -102,7 +102,7 @@ static inline int hasSlashes(const char *str)
 
 #define PARSER_MALLOC(__varPtr, __type)		do \
 	{ \
-		*__varPtr = malloc(sizeof(__type)); \
+		*__varPtr = (__type *)malloc(sizeof(__type)); \
 		if (*__varPtr == NULL) \
 			{ printf("Malloc failed.\n"); return NULL; }; \
 		memset(*__varPtr, 0, sizeof(__type)); \
@@ -115,10 +115,10 @@ static inline int hasSlashes(const char *str)
 
 static void *parseMessage(const char *line)
 {
-	struct zudiIndex_messageS	*ret;
+	struct zudi::messageS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_messageS);
+	PARSER_MALLOC(&ret, struct zudi::messageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -145,10 +145,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseDisasterMessage(const char *line)
 {
-	struct zudiIndex_disasterMessageS	*ret;
+	struct zudi::disasterMessageS	*ret;
 	char					*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_disasterMessageS);
+	PARSER_MALLOC(&ret, struct zudi::disasterMessageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -175,9 +175,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseMessageFile(const char *line)
 {
-	struct zudiIndex_messageFileS	*ret;
+	struct zudi::messageFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_messageFileS);
+	PARSER_MALLOC(&ret, struct zudi::messageFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -198,9 +198,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseReadableFile(const char *line)
 {
-	struct zudiIndex_readableFileS	*ret;
+	struct zudi::readableFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_readableFileS);
+	PARSER_MALLOC(&ret, struct zudi::readableFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -340,11 +340,11 @@ static int parseRequires(const char *line)
 		{ return 0; };
 
 	strcpyUpToWhitespace(
-		currentDriver->d.requirements[currentDriver->h.nRequirements].name,
+		currentDriver->requirements[currentDriver->h.nRequirements].name,
 		line, tmp);
 
 	line = skipWhitespaceIn(tmp);
-	currentDriver->d.requirements[currentDriver->h.nRequirements].version =
+	currentDriver->requirements[currentDriver->h.nRequirements].version =
 		strtoul(line, &tmp, 16);
 
 	if (line == tmp) { return 0; };
@@ -353,18 +353,18 @@ static int parseRequires(const char *line)
 	{
 		sprintf(verboseBuff, "REQUIRES[%d]: v%x; \"%s\"",
 			currentDriver->h.nRequirements,
-			currentDriver->d.requirements[
+			currentDriver->requirements[
 				currentDriver->h.nRequirements].version,
-			currentDriver->d.requirements[
+			currentDriver->requirements[
 				currentDriver->h.nRequirements].name);
 	};
 
 	if (!strcmp(
-		currentDriver->d.requirements[currentDriver->h.nRequirements].name,
+		currentDriver->requirements[currentDriver->h.nRequirements].name,
 		"udi"))
 	{
 		hasRequiresUdi = 1;
-		currentDriver->h.requiredUdiVersion = currentDriver->d.requirements[
+		currentDriver->h.requiredUdiVersion = currentDriver->requirements[
 			currentDriver->h.nRequirements].version;
 
 		return 1;
@@ -382,14 +382,14 @@ static int parseMeta(const char *line)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
-	currentDriver->d.metalanguages[currentDriver->h.nMetalanguages].index =
+	currentDriver->metalanguages[currentDriver->h.nMetalanguages].index =
 		strtoul(line, &tmp, 10);
 
 	/* Meta index 0 is reserved, and strtoul() returns 0 when it can't
 	 * convert. Regardless of the reason, 0 is an invalid return value for
 	 * this situation.
 	 **/
-	if (!currentDriver->d.metalanguages[currentDriver->h.nMetalanguages].index)
+	if (!currentDriver->metalanguages[currentDriver->h.nMetalanguages].index)
 		{ return 0; };
 
 	line = skipWhitespaceIn(tmp);
@@ -399,7 +399,7 @@ static int parseMeta(const char *line)
 		{ return 0; };
 
 	strcpyUpToWhitespace(
-		currentDriver->d.metalanguages[
+		currentDriver->metalanguages[
 			currentDriver->h.nMetalanguages].name,
 		line, tmp);
 
@@ -407,9 +407,9 @@ static int parseMeta(const char *line)
 	{
 		sprintf(verboseBuff, "META[%d]: %d \"%s\"",
 			currentDriver->h.nMetalanguages,
-			currentDriver->d.metalanguages[
+			currentDriver->metalanguages[
 				currentDriver->h.nMetalanguages].index,
-			currentDriver->d.metalanguages[
+			currentDriver->metalanguages[
 				currentDriver->h.nMetalanguages].name);
 	};
 
@@ -425,37 +425,37 @@ static int parseChildBops(const char *line)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
-	currentDriver->d.childBops[currentDriver->h.nChildBops].metaIndex =
+	currentDriver->childBops[currentDriver->h.nChildBops].metaIndex =
 		strtoul(line, &end, 10);
 
 	// Regardless of the reason, 0 is an invalid return value here.
-	if (!currentDriver->d.childBops[currentDriver->h.nChildBops].metaIndex)
+	if (!currentDriver->childBops[currentDriver->h.nChildBops].metaIndex)
 		{ return 0; };
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.childBops[currentDriver->h.nChildBops].regionIndex =
+	currentDriver->childBops[currentDriver->h.nChildBops].regionIndex =
 		strtoul(line, &end, 10);
 
 	// Region index 0 is valid.
 	if (line == end) { return 0; };
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.childBops[currentDriver->h.nChildBops].opsIndex =
+	currentDriver->childBops[currentDriver->h.nChildBops].opsIndex =
 		strtoul(line, &end, 10);
 
 	// 0 is also invalid here.
-	if (!currentDriver->d.childBops[currentDriver->h.nChildBops].opsIndex)
+	if (!currentDriver->childBops[currentDriver->h.nChildBops].opsIndex)
 		{ return 0; };
 
 	if (verboseMode)
 	{
 		sprintf(verboseBuff, "CHILD_BOPS[%d]: %d %d %d",
 			currentDriver->h.nChildBops,
-			currentDriver->d.childBops[currentDriver->h.nChildBops]
+			currentDriver->childBops[currentDriver->h.nChildBops]
 				.metaIndex,
-			currentDriver->d.childBops[currentDriver->h.nChildBops]
+			currentDriver->childBops[currentDriver->h.nChildBops]
 				.regionIndex,
-			currentDriver->d.childBops[currentDriver->h.nChildBops]
+			currentDriver->childBops[currentDriver->h.nChildBops]
 				.opsIndex);
 	};
 
@@ -471,28 +471,28 @@ static int parseParentBops(const char *line)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
-	currentDriver->d.parentBops[currentDriver->h.nParentBops].metaIndex =
+	currentDriver->parentBops[currentDriver->h.nParentBops].metaIndex =
 		strtoul(line, &end, 10);
 
-	if (!currentDriver->d.parentBops[currentDriver->h.nParentBops].metaIndex)
+	if (!currentDriver->parentBops[currentDriver->h.nParentBops].metaIndex)
 		{ return 0; };
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.parentBops[currentDriver->h.nParentBops].regionIndex =
+	currentDriver->parentBops[currentDriver->h.nParentBops].regionIndex =
 		strtoul(line, &end, 10);
 
 	// 0 is a valid value for region_idx.
 	if (line == end) { return 0; };
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.parentBops[currentDriver->h.nParentBops].opsIndex =
+	currentDriver->parentBops[currentDriver->h.nParentBops].opsIndex =
 		strtoul(line, &end, 10);
 
-	if (!currentDriver->d.parentBops[currentDriver->h.nParentBops].opsIndex)
+	if (!currentDriver->parentBops[currentDriver->h.nParentBops].opsIndex)
 		{ return 0; };
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.parentBops[currentDriver->h.nParentBops].bindCbIndex =
+	currentDriver->parentBops[currentDriver->h.nParentBops].bindCbIndex =
 		strtoul(line, &end, 10);
 
 	// 0 is a valid index value for bind_cb_idx.
@@ -502,13 +502,13 @@ static int parseParentBops(const char *line)
 	{
 		sprintf(verboseBuff, "PARENT_BOPS[%d]: %d %d %d %d",
 			currentDriver->h.nParentBops,
-			currentDriver->d.parentBops[currentDriver->h.nParentBops]
+			currentDriver->parentBops[currentDriver->h.nParentBops]
 				.metaIndex,
-			currentDriver->d.parentBops[currentDriver->h.nParentBops]
+			currentDriver->parentBops[currentDriver->h.nParentBops]
 				.regionIndex,
-			currentDriver->d.parentBops[currentDriver->h.nParentBops]
+			currentDriver->parentBops[currentDriver->h.nParentBops]
 				.opsIndex,
-			currentDriver->d.parentBops[currentDriver->h.nParentBops]
+			currentDriver->parentBops[currentDriver->h.nParentBops]
 				.bindCbIndex);
 	};
 
@@ -524,48 +524,48 @@ static int parseInternalBops(const char *line)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
-	currentDriver->d.internalBops[currentDriver->h.nInternalBops].metaIndex =
+	currentDriver->internalBops[currentDriver->h.nInternalBops].metaIndex =
 		strtoul(line, &end, 10);
 
-	if (!currentDriver->d.internalBops[currentDriver->h.nInternalBops]
+	if (!currentDriver->internalBops[currentDriver->h.nInternalBops]
 		.metaIndex)
 	{
 		return 0;
 	};
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.internalBops[currentDriver->h.nInternalBops].regionIndex =
+	currentDriver->internalBops[currentDriver->h.nInternalBops].regionIndex =
 		strtoul(line, &end, 10);
 
 	// 0 is actually not a valid value for region_idx in this case.
-	if (!currentDriver->d.internalBops[currentDriver->h.nInternalBops]
+	if (!currentDriver->internalBops[currentDriver->h.nInternalBops]
 		.regionIndex)
 	{
 		return 0;
 	};
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.internalBops[currentDriver->h.nInternalBops].opsIndex0 =
+	currentDriver->internalBops[currentDriver->h.nInternalBops].opsIndex0 =
 		strtoul(line, &end, 10);
 
-	if (!currentDriver->d.internalBops[currentDriver->h.nInternalBops]
+	if (!currentDriver->internalBops[currentDriver->h.nInternalBops]
 		.opsIndex0)
 	{
 		return 0;
 	};
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.internalBops[currentDriver->h.nInternalBops].opsIndex1 =
+	currentDriver->internalBops[currentDriver->h.nInternalBops].opsIndex1 =
 		strtoul(line, &end, 10);
 
-	if (!currentDriver->d.internalBops[currentDriver->h.nInternalBops]
+	if (!currentDriver->internalBops[currentDriver->h.nInternalBops]
 		.opsIndex1)
 	{
 		return 0;
 	};
 
 	line = skipWhitespaceIn(end);
-	currentDriver->d.internalBops[currentDriver->h.nInternalBops].bindCbIndex =
+	currentDriver->internalBops[currentDriver->h.nInternalBops].bindCbIndex =
 		strtoul(line, &end, 10);
 
 	// 0 is a valid value for bind_cb_idx.
@@ -575,15 +575,15 @@ static int parseInternalBops(const char *line)
 	{
 		sprintf(verboseBuff, "INTERNAL_BOPS[%d]: %d %d %d %d %d",
 			currentDriver->h.nInternalBops,
-			currentDriver->d.internalBops[
+			currentDriver->internalBops[
 				currentDriver->h.nInternalBops].metaIndex,
-			currentDriver->d.internalBops[
+			currentDriver->internalBops[
 				currentDriver->h.nInternalBops].regionIndex,
-			currentDriver->d.internalBops[
+			currentDriver->internalBops[
 				currentDriver->h.nInternalBops].opsIndex0,
-			currentDriver->d.internalBops[
+			currentDriver->internalBops[
 				currentDriver->h.nInternalBops].opsIndex1,
-			currentDriver->d.internalBops[
+			currentDriver->internalBops[
 				currentDriver->h.nInternalBops].bindCbIndex);
 	};
 
@@ -599,18 +599,18 @@ static int parseModule(const char *line)
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { return 0; };
-	strcpy(currentDriver->d.modules[currentDriver->h.nModules].fileName, line);
+	strcpy(currentDriver->modules[currentDriver->h.nModules].fileName, line);
 
 	// We assign a custom module index to each module for convenience.
-	currentDriver->d.modules[currentDriver->h.nModules].index =
+	currentDriver->modules[currentDriver->h.nModules].index =
 		currentDriver->h.nModules;
 
 	if (verboseMode)
 	{
 		sprintf(verboseBuff, "MODULE[%d]: (%d) \"%s\"",
 			currentDriver->h.nModules,
-			currentDriver->d.modules[currentDriver->h.nModules].index,
-			currentDriver->d.modules[currentDriver->h.nModules]
+			currentDriver->modules[currentDriver->h.nModules].index,
+			currentDriver->modules[currentDriver->h.nModules]
 				.fileName);
 	};
 
@@ -619,12 +619,12 @@ static int parseModule(const char *line)
 }
 
 static const char *parseRegionAttribute(
-	struct zudiIndex_regionS *r, const char *line, int *status
+	struct zudi::regionS *r, const char *line, int *status
 	)
 {
 	char			*white;
 
-#define REGION_ATTRIBUTE_PARSER_PROLOGUE	\
+#define REGION_ATTRUTE_PARSER_PROLOGUE	\
 	do { \
 		white = findWhitespaceAfter(line); \
 		if (white == NULL) { goto fail; }; \
@@ -634,7 +634,7 @@ static const char *parseRegionAttribute(
 
 	if (!strncmp(line, "type", strlen("type")))
 	{
-		REGION_ATTRIBUTE_PARSER_PROLOGUE;
+		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		if (!strncmp(line, "normal", strlen("normal")))
 			{ goto success; };
@@ -651,7 +651,7 @@ static const char *parseRegionAttribute(
 
 	if (!strncmp(line, "binding", strlen("binding")))
 	{
-		REGION_ATTRIBUTE_PARSER_PROLOGUE;
+		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		if (!strncmp(line, "static", strlen("static")))
 			{ goto success; };
@@ -667,16 +667,16 @@ static const char *parseRegionAttribute(
 
 	if (!strncmp(line, "priority", strlen("priority")))
 	{
-		REGION_ATTRIBUTE_PARSER_PROLOGUE;
+		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		if (!strncmp(line, "lo", strlen("lo"))) {
-			r->priority = ZUDI_REGION_PRIO_LOW; goto success;
+			r->priority = zudi::REGION_PRIO_LOW; goto success;
 		};
 		if (!strncmp(line, "med", strlen("med"))) {
-			r->priority = ZUDI_REGION_PRIO_MEDIUM; goto success;
+			r->priority = zudi::REGION_PRIO_MEDIUM; goto success;
 		};
 		if (!strncmp(line, "hi", strlen("hi"))) {
-			r->priority = ZUDI_REGION_PRIO_HIGH; goto success;
+			r->priority = zudi::REGION_PRIO_HIGH; goto success;
 		};
 
 		printf("Error: Invalid value for region attribute "
@@ -688,7 +688,7 @@ static const char *parseRegionAttribute(
 	if (!strncmp(line, "latency", strlen("latency"))
 		|| !strncmp(line, "overrun_time", strlen("overrun_time")))
 	{
-		REGION_ATTRIBUTE_PARSER_PROLOGUE;
+		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		fprintf(
 			stderr,
@@ -714,11 +714,11 @@ fail:
 
 static void *parseRegion(const char *line)
 {
-	struct zudiIndex_regionS	*ret;
+	struct zudi::regionS	*ret;
 	char				*tmp;
 	int				status;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_regionS);
+	PARSER_MALLOC(&ret, struct zudi::regionS);
 	line = skipWhitespaceIn(line);
 
 	ret->driverId = currentDriver->h.id;
@@ -754,7 +754,7 @@ static void *parseRegion(const char *line)
 			"Prio: %d, latency %d, dyn.? %c, FP? %c, intr.? %c",
 			ret->index,
 			ret->moduleIndex,
-			currentDriver->d.modules[ret->moduleIndex].fileName,
+			currentDriver->modules[ret->moduleIndex].fileName,
 			(int)ret->priority, (int)ret->latency,
 			(ret->flags & ZUDI_REGION_FLAGS_DYNAMIC) ? 'y' : 'n',
 			(ret->flags & ZUDI_REGION_FLAGS_FP) ? 'y' : 'n',
@@ -782,7 +782,7 @@ static uint8_t getDigit(const char c)
 }
 
 static const char *parseDeviceAttribute(
-	struct zudiIndex_deviceS *d, const char *line, int *status
+	struct zudi::device::deviceS *d, const char *line, int *status
 	)
 {
 	char		*white;
@@ -793,7 +793,7 @@ static const char *parseDeviceAttribute(
 	white = findWhitespaceAfter(line);
 	if (white == NULL) { goto fail; };
 
-	if (strlenUpToWhitespace(line, white) >= ZUDI_DEVICE_ATTRIB_NAME_MAXLEN)
+	if (strlenUpToWhitespace(line, white) >= UDI_MAX_ATTR_NAMELEN)
 		{ goto fail; };
 
 	strcpyUpToWhitespace(
@@ -807,13 +807,13 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "string", strlen("string"))) {
 		d->d[d->h.nAttributes].type =
-			ZUDI_DEVICE_ATTR_STRING;
+			zudi::device::ATTR_STRING;
 
 		line = skipWhitespaceIn(white);
 
 		white = findWhitespaceAfter(line);
 		retOffset = strlenUpToWhitespace(line, white);
-		if (retOffset >= ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN)
+		if (retOffset >= UDI_MAX_ATTR_SIZE)
 			{ goto fail; };
 
 		strcpyUpToWhitespace(
@@ -825,10 +825,10 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "ubit32", strlen("ubit32"))) {
 		d->d[d->h.nAttributes].type =
-			ZUDI_DEVICE_ATTR_UBIT32;
+			zudi::device::ATTR_UBIT32;
 
 		line = skipWhitespaceIn(white);
-		d->d[d->h.nAttributes].value.unsigned32 =
+		d->d[d->h.nAttributes].value.u32val =
 			strtoul(line, &white, 0);
 
 		if (line == white) { goto fail; };
@@ -839,7 +839,7 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "boolean", strlen("boolean"))) {
-		d->d[d->h.nAttributes].type = ZUDI_DEVICE_ATTR_BOOL;
+		d->d[d->h.nAttributes].type = zudi::device::ATTR_BOOL;
 		line = skipWhitespaceIn(white);
 		if (*line == 't' || *line == 'T') {
 			d->d[d->h.nAttributes].value.boolval = 1;
@@ -853,14 +853,14 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "array", strlen("array"))) {
 		d->d[d->h.nAttributes].type =
-			ZUDI_DEVICE_ATTR_ARRAY8;
+			zudi::device::ATTR_ARRAY8;
 
 		line = skipWhitespaceIn(white);
 
 		white = findWhitespaceAfter(line);
 		retOffset = strlenUpToWhitespace(line, white);
 		// The ARRAY8 values come in pairs; the strlen cannot be odd.
-		if (retOffset > ZUDI_DEVICE_ATTRIB_VALUE_MAXLEN
+		if (retOffset > UDI_MAX_ATTR_SIZE
 			|| (retOffset % 2) != 0)
 			{ goto fail; };
 
@@ -896,11 +896,11 @@ success:
 
 static void *parseDevice(const char *line)
 {
-	struct zudiIndex_deviceS	*ret;
+	struct zudi::device::deviceS	*ret;
 	char				*tmp;
 	int				status, i, j, printLen;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_deviceS);
+	PARSER_MALLOC(&ret, struct zudi::device::deviceS);
 	ret->h.index = currentDriver->h.nDevices;
 	line = skipWhitespaceIn(line);
 	ret->h.messageIndex = strtoul(line, &tmp, 10);
@@ -935,7 +935,7 @@ static void *parseDevice(const char *line)
 			printLen += sprintf(&verboseBuff[printLen], ".\n");
 			switch (ret->d[i].type)
 			{
-			case ZUDI_DEVICE_ATTR_STRING:
+			case zudi::device::ATTR_STRING:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tSTR %s: \"%s\"",
@@ -943,7 +943,7 @@ static void *parseDevice(const char *line)
 					ret->d[i].value.string);
 
 				break;
-			case ZUDI_DEVICE_ATTR_ARRAY8:
+			case zudi::device::ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tARR %s: size %d: ",
@@ -960,7 +960,7 @@ static void *parseDevice(const char *line)
 				};
 
 				break;
-			case ZUDI_DEVICE_ATTR_BOOL:
+			case zudi::device::ATTR_BOOL:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tBOOL %s: %d",
@@ -968,12 +968,12 @@ static void *parseDevice(const char *line)
 					ret->d[i].value.boolval);
 
 				break;
-			case ZUDI_DEVICE_ATTR_UBIT32:
+			case zudi::device::ATTR_UBIT32:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tU32 %s: 0x%x",
 					ret->d[i].name,
-					ret->d[i].value.unsigned32);
+					ret->d[i].value.u32val);
 
 				break;
 			};
@@ -988,10 +988,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseProvides(const char *line)
 {
-	struct zudiIndex_provisionS	*ret;
+	struct zudi::provisionS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_provisionS);
+	PARSER_MALLOC(&ret, struct zudi::provisionS);
 
 	line = skipWhitespaceIn(line);
 	tmp = findWhitespaceAfter(line);
@@ -1018,12 +1018,12 @@ static void *parseProvides(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
-static int parseRankAttribute(struct zudiIndex_rankS *rank, const char *line)
+static int parseRankAttribute(struct zudi::rank::rankS *rank, const char *line)
 {
 	char		*white;
 
 	white = findWhitespaceAfter(line);
-	if (strlenUpToWhitespace(line, white) >= ZUDI_RANK_ATTRIB_NAME_MAXLEN)
+	if (strlenUpToWhitespace(line, white) >= ZUDI_RANK_ATTR_NAME_MAXLEN)
 		{ return 0; };
 
 	strcpyUpToWhitespace(rank->d[rank->h.nAttributes].name, line, white);
@@ -1032,11 +1032,11 @@ static int parseRankAttribute(struct zudiIndex_rankS *rank, const char *line)
 
 static void *parseRank(const char *line)
 {
-	struct zudiIndex_rankS		*ret;
+	struct zudi::rank::rankS		*ret;
 	char				*tmp;
 	int				status, i, printLen=0;
 
-	PARSER_MALLOC(&ret, struct zudiIndex_rankS);
+	PARSER_MALLOC(&ret, struct zudi::rank::rankS);
 	ret->h.driverId = currentDriver->h.id;
 
 	line = skipWhitespaceIn(line);
@@ -1052,7 +1052,7 @@ static void *parseRank(const char *line)
 
 	do
 	{
-		if (ret->h.nAttributes >= ZUDI_RANK_MAX_NATTRIBS)
+		if (ret->h.nAttributes >= ZUDI_RANK_MAX_NATTRS)
 		{
 			fprintf(stderr, limitExceededMessage);
 			goto releaseAndExit;

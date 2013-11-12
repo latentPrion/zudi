@@ -1,6 +1,7 @@
 .PHONY=fonyphile
 CFLAGS=-O3 -Wall -Wextra -pedantic -std=c99
-
+LDFLAGS=-lstdc++
+CPPFLAGS=-I../include
 all: zudiindex zudiindex-addall
 
 zudiindex: parse.o index.o
@@ -19,5 +20,4 @@ clean: fonyphile
 	rm -f *.o zudiindex
 fonyphile:
 	rm -f clean fonyphile
-
 
