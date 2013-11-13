@@ -11,6 +11,7 @@
  * quickly gain information about the whole of the index at a glance. Versioning
  * of the struct layouts used is also included for forward expansion.
  **/
+
 #define ZUDI_MESSAGE_MAXLEN		(150)
 #define ZUDI_FILENAME_MAXLEN		(64)
 
@@ -60,7 +61,9 @@ namespace zudi
 
 		struct _attrDataS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *outfile, FILE *stringfile);
+#endif
 
 			uint8_t		type, size;
 			char		name[UDI_MAX_ATTR_NAMELEN];
@@ -76,9 +79,11 @@ namespace zudi
 		#define ZUDI_DEVICE_MAX_NATTRS		(20)
 		struct _deviceS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int  writeOut(
 				FILE *headerfile, FILE *datafile,
 				FILE *strings);
+#endif
 
 			struct headerS		h;
 			struct _attrDataS	d[ZUDI_DEVICE_MAX_NATTRS];
@@ -144,7 +149,9 @@ namespace zudi
 
 		struct _requirementS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	version;
 			char		name[ZUDI_DRIVER_REQUIREMENT_MAXLEN];
@@ -158,7 +165,9 @@ namespace zudi
 
 		struct _metalanguageS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint16_t	index;
 			char		name[ZUDI_DRIVER_METALANGUAGE_MAXLEN];
@@ -189,7 +198,9 @@ namespace zudi
 
 		struct _moduleS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint16_t	index;
 			char		fileName[ZUDI_FILENAME_MAXLEN];
@@ -208,7 +219,9 @@ namespace zudi
 		#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
 		struct regionS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	driverId;
 			uint16_t	index, moduleIndex;
@@ -226,7 +239,9 @@ namespace zudi
 
 		struct _messageS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	driverId;
 			uint16_t	index;
@@ -242,7 +257,9 @@ namespace zudi
 
 		struct _disasterMessageS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	driverId;
 			uint16_t	index;
@@ -258,7 +275,9 @@ namespace zudi
 
 		struct _messageFileS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	driverId;
 			uint16_t	index;
@@ -273,7 +292,9 @@ namespace zudi
 
 		struct _readableFileS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint16_t	driverId, index;
 			char		fileName[ZUDI_FILENAME_MAXLEN];
@@ -289,7 +310,9 @@ namespace zudi
 		#define ZUDI_PROVISION_NAME_MAXLEN	(ZUDI_DRIVER_METALANGUAGE_MAXLEN)
 		struct _provisionS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			uint32_t	driverId;
 			uint32_t	version;
@@ -336,14 +359,18 @@ namespace zudi
 
 		struct _rankAttrS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
+#endif
 
 			char		name[UDI_MAX_ATTR_NAMELEN];
 		};
 
 		struct _rankS
 		{
+#ifndef __ZAMBESII_KERNEL_SOURCE__
 			int writeOut(FILE *rankF, FILE *dataF, FILE *stringF);
+#endif
 
 			struct zudi::rank::headerS	h;
 			struct zudi::rank::_rankAttrS	d[ZUDI_RANK_MAX_NATTRS];
