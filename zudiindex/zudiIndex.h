@@ -329,14 +329,21 @@ namespace zudi
 			uint32_t	dataOff;
 		};
 
+		struct rankAttrS
+		{
+			uint32_t	nameOff;
+		};
+
 		struct _rankAttrS
 		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
 			char		name[UDI_MAX_ATTR_NAMELEN];
 		};
 
-		struct rankS
+		struct _rankS
 		{
-			int writeOut(FILE *outfile, FILE *stringfile);
+			int writeOut(FILE *rankF, FILE *dataF, FILE *stringF);
 
 			struct zudi::rank::headerS	h;
 			struct zudi::rank::_rankAttrS	d[ZUDI_RANK_MAX_NATTRS];

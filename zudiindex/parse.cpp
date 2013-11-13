@@ -1018,7 +1018,7 @@ static void *parseProvides(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
-static int parseRankAttribute(struct zudi::rank::rankS *rank, const char *line)
+static int parseRankAttribute(struct zudi::rank::_rankS *rank, const char *line)
 {
 	char		*white;
 
@@ -1032,11 +1032,11 @@ static int parseRankAttribute(struct zudi::rank::rankS *rank, const char *line)
 
 static void *parseRank(const char *line)
 {
-	struct zudi::rank::rankS		*ret;
+	struct zudi::rank::_rankS		*ret;
 	char				*tmp;
 	int				status, i, printLen=0;
 
-	PARSER_MALLOC(&ret, struct zudi::rank::rankS);
+	PARSER_MALLOC(&ret, struct zudi::rank::_rankS);
 	ret->h.driverId = currentDriver->h.id;
 
 	line = skipWhitespaceIn(line);

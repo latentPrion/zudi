@@ -290,23 +290,11 @@ int index_writeDevices(uint32_t *offset)
 	};
 
 	devFile = fopen(deviceFFullName, "a");
-	if (devFile == NULL)
-	{
-		fprintf(stderr, "Error: Failed to open devices index.\n");
-		return EX_FILE_OPEN;
-	};
-
 	strFile = fopen(stringFFullName, "a");
-	if (strFile == NULL)
-	{
-		fprintf(stderr, "Error: Failed to open string index.\n");
-		return EX_FILE_OPEN;
-	};
-
 	dataFile = fopen(dataFFullName, "a");
-	if (dataFile == NULL)
+	if (devFile == NULL || strFile == NULL || dataFile == NULL)
 	{
-		fprintf(stderr, "Error: Failed to open data file.\n");
+		fprintf(stderr, "Error: Failed to open devices, data or strings index.\n");
 		return EX_FILE_OPEN;
 	};
 
@@ -381,51 +369,56 @@ static int index_writeProvisions(uint32_t *provOffset)
 static int index_writeRanks(uint32_t *fileOffset)
 {
 	struct listElementS		*tmp;
-	struct zudi::rank::rankS	*item;
-	FILE				*rFile;
-	char				*fullName=NULL;
+	struct zudi::rank::_rankS	*item;
+	FILE				*rankF, *dataF, *stringF;
+	char				*rankFFullName=NULL,
+					*dataFFullName=NULL,
+					*stringFFullName=NULL;
 	int				i;
 
-	fullName = makeFullName(fullName, indexPath, "ranks.zudi-index");
-	if (fullName == NULL)
+	rankFFullName = makeFullName(
+		rankFFullName, indexPath, "ranks.zudi-index");
+
+	dataFFullName = makeFullName(
+		dataFFullName, indexPath, "driver-data.zudi-index");
+
+	stringFFullName = makeFullName(
+		stringFFullName, indexPath, "strings.zudi-index");
+
+	if (rankFFullName == NULL || dataFFullName == NULL
+		|| stringFFullName == NULL)
 	{
-		fprintf(stderr, "Error: Nomem in makeFullName for ranks index.\n");
+		fprintf(stderr, "Error: Nomem in makeFullName for ranks, "
+			"driver-data or string index.\n");
+
 		return EX_NOMEM;
 	};
 
-	rFile = fopen(fullName, "a");
-	if (rFile == NULL)
+	rankF = fopen(rankFFullName, "a");
+	dataF = fopen(dataFFullName, "a");
+	stringF = fopen(stringFFullName, "a");
+	if (rankF == NULL || dataF == NULL || stringF == NULL)
 	{
-		fprintf(stderr, "Error: Failed to open ranks index.\n");
+		fprintf(stderr, "Error: Failed to open ranks, data or string index.\n");
 		return EX_FILE_OPEN;
 	};
 
-	*fileOffset = ftell(rFile);
+	*fileOffset = ftell(rankF);
 
 	for (tmp = rankList; tmp != NULL; tmp = tmp->next)
 	{
-		item = (zudi::rank::rankS *)tmp->item;
+		item = (zudi::rank::_rankS *)tmp->item;
 
-		if (fwrite(&item->h, sizeof(item->h), 1, rFile) < 1)
+		if (item->writeOut(rankF, dataF, stringF))
 		{
-			fclose(rFile);
-			fprintf(stderr, "Error: Failed to write rank header.\n");
-			return EX_FILE_IO;
-		};
-
-		for (i=0; i<item->h.nAttributes; i++)
-		{
-			if (fwrite(&item->d[i], sizeof(item->d[i]), 1, rFile)
-				< 1)
-			{
-				fclose(rFile);
-				fprintf(stderr, "Error: Failed to write rank attribute.\n");
-				return EX_FILE_IO;
-			};
+			fprintf(stderr, "Failed to write out rank line.\n");
+			break;
 		};
 	};
 
-	fclose(rFile);
+	fclose(rankF);
+	fclose(dataF);
+	fclose(stringF);
 	return EX_SUCCESS;
 }
 
@@ -816,6 +809,48 @@ int zudi::driver::regionS::writeOut(FILE *dataF, FILE *stringF)
 	if (fwrite(this, sizeof(*this), 1, dataF) < 1)
 	{
 		fprintf(stderr, "Failed to write out region.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::rank::_rankS::writeOut(FILE *rankF, FILE *dataF, FILE *stringF)
+{
+	int		err;
+
+	h.dataOff = ftell(dataF);
+
+	for (int i=0; i<h.nAttributes; i++)
+	{
+		err = d->writeOut(dataF, stringF);
+		if (err != EX_SUCCESS) { return err; };
+	};
+
+	if (fwrite(&h, sizeof(h), 1, rankF) < 1)
+	{
+		fprintf(stderr, "Failed to write rank header.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::rank::_rankAttrS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::rank::rankAttrS	tmp;
+
+	tmp.nameOff = ftell(stringF);
+
+	if (fwrite(name, strlen(name) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write rank attribute name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write rank attribute.\n");
 		return EX_FILE_IO;
 	};
 
