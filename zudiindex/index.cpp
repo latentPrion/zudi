@@ -1,5 +1,6 @@
 
 #include "zudipropsc.h"
+#include <string.h>
 
 
 struct listElementS
@@ -112,7 +113,7 @@ static int index_writeDriverHeader(void)
 	struct zudi::driver::driverS	*dStruct;
 
 	fullName = makeFullName(
-		fullName, indexPath, "driver-headers.zudi-index");
+		fullName, indexPath, "drivers.zudi-index");
 
 	if (fullName == NULL) { return EX_NOMEM; };
 
@@ -138,23 +139,31 @@ static int index_writeDriverHeader(void)
 
 static int index_writeDriverData(uint32_t *fileOffset)
 {
-	FILE				*ddFile;
+	FILE				*ddFile, *strFile;
 	int				i;
 	struct zudi::driver::driverS	*dStruct;
-	char				*fullName=NULL;
+	char				*driverDataFFullName=NULL,
+					*stringFFullName=NULL;
 
-	fullName = makeFullName(fullName, indexPath, "driver-data.zudi-index");
-	if (fullName == NULL)
+	driverDataFFullName = makeFullName(
+		driverDataFFullName, indexPath, "driver-data.zudi-index");
+	
+	stringFFullName = makeFullName(
+		stringFFullName, indexPath, "strings.zudi-index");
+
+	if (driverDataFFullName == NULL || stringFFullName == NULL)
 	{
 		fprintf(stderr, "Error: Nomem in makeFullName for driver-data "
 			"index.\n");
+
 		return EX_NOMEM;
 	};
 
-	ddFile = fopen(fullName, "a");
-	if (ddFile == NULL)
+	ddFile = fopen(driverDataFFullName, "a");
+	strFile = fopen(stringFFullName, "a");
+	if (ddFile == NULL || strFile == NULL)
 	{
-		fprintf(stderr, "Error: Failed to open driver-data index.\n");
+		fprintf(stderr, "Error: Failed to open driver-data or string index.\n");
 		return EX_FILE_OPEN;
 	};
 
@@ -165,11 +174,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	// First write out the modules.
 	for (i=0; i<dStruct->h.nModules; i++)
 	{
-		if (fwrite(
-			&dStruct->modules[i],
-			sizeof(dStruct->modules[i]),
-			1, ddFile)
-			!= 1)
+		if (dStruct->modules[i].writeOut(ddFile, strFile) != EX_SUCCESS)
 		{
 			fclose(ddFile);
 			fprintf(stderr, "Error: Failed to write out module.\n");
@@ -181,13 +186,11 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	// Then write out the requirements.
 	for (i=0; i<dStruct->h.nRequirements; i++)
 	{
-		if (fwrite(
-			&dStruct->requirements[i],
-			sizeof(dStruct->requirements[i]),
-			1, ddFile)
-			!= 1)
+		if (dStruct->requirements[i].writeOut(ddFile, strFile)
+			!= EX_SUCCESS)
 		{
 			fclose(ddFile);
+			fclose(strFile);
 			fprintf(stderr, "Error: Failed to write out requirement.\n");
 			return EX_FILE_IO;
 		};
@@ -197,13 +200,11 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	// Then write out the metalanguage indexes.
 	for (i=0; i<dStruct->h.nMetalanguages; i++)
 	{
-		if (fwrite(
-			&dStruct->metalanguages[i],
-			sizeof(dStruct->metalanguages[i]),
-			1, ddFile)
-			!= 1)
+		if (dStruct->metalanguages[i].writeOut(ddFile, strFile)
+			!= EX_SUCCESS)
 		{
 			fclose(ddFile);
+			fclose(strFile);
 			fprintf(stderr, "Error: Failed to write out metalanguage.\n");
 			return EX_FILE_IO;
 		};
@@ -265,100 +266,115 @@ static int index_writeDriverData(uint32_t *fileOffset)
 int index_writeDevices(uint32_t *offset)
 {
 	struct listElementS		*tmp;
-	struct zudi::device::deviceS	*dev;
-	FILE				*dFile;
-	char				*fullName=NULL;
+	struct zudi::device::_deviceS	*dev;
+	FILE				*dataFile, *devFile, *strFile;
+	char				*deviceFFullName=NULL,
+					*stringFFullName=NULL,
+					*dataFFullName=NULL;
 	int				i;
 
-	fullName = makeFullName(
-		fullName, indexPath, "devices.zudi-index");
+	deviceFFullName = makeFullName(
+		deviceFFullName, indexPath, "devices.zudi-index");
 
-	if (fullName == NULL)
+	stringFFullName = makeFullName(
+		stringFFullName, indexPath, "strings.zudi-index");
+
+	dataFFullName = makeFullName(
+		dataFFullName, indexPath, "driver-data.zudi-index");
+
+	if (deviceFFullName == NULL || stringFFullName == NULL
+		|| dataFFullName == NULL)
 	{
 		fprintf(stderr, "Error: Nomem in makeFullName for devices index.\n");
 		return EX_NOMEM;
 	};
 
-	dFile = fopen(fullName, "a");
-	if (dFile == NULL)
+	devFile = fopen(deviceFFullName, "a");
+	if (devFile == NULL)
 	{
 		fprintf(stderr, "Error: Failed to open devices index.\n");
 		return EX_FILE_OPEN;
 	};
 
-	*offset = ftell(dFile);
-
-	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
+	strFile = fopen(stringFFullName, "a");
+	if (strFile == NULL)
 	{
-		dev = (zudi::device::deviceS *)tmp->item;
-
-		// Write the device header out.
-		if (fwrite(&dev->h, sizeof(dev->h), 1, dFile) < 1)
-		{
-			fprintf(stderr, "Error: failed to write out device header.\n");
-			fclose(dFile);
-			return EX_FILE_IO;
-		};
-
-		// And write the device data immediately following it.
-		for (i=0; i<dev->h.nAttributes; i++)
-		{
-			if (fwrite(
-				&dev->d[i],
-				sizeof(dev->d[i]), 1, dFile) < 1)
-			{
-				fprintf(stderr, "Error: Failed to write out "
-					"device attribute.\n");
-
-				fclose(dFile);
-				return EX_FILE_IO;
-			};
-		};
-	};
-
-	fclose(dFile);
-	return EX_SUCCESS;
-}
-
-static int index_writeListToDisk(
-	struct listElementS *list, const char *fileName, size_t elemSize
-	)
-{
-	struct listElementS		*tmp;
-	void				*item;
-	FILE				*indexFile;
-	char				*fullName=NULL;
-
-	fullName = makeFullName(fullName, indexPath, fileName);
-	if (fullName == NULL)
-	{
-		fprintf(stderr, "Error: Nomem in makeFullName for %s index.\n", fileName);
-		return EX_NOMEM;
-	};
-
-	indexFile = fopen(fullName, "a");
-	if (indexFile == NULL)
-	{
-		fprintf(stderr, "Error: Failed to open %s index.\n", fileName);
+		fprintf(stderr, "Error: Failed to open string index.\n");
 		return EX_FILE_OPEN;
 	};
 
-	for (tmp = list; tmp != NULL; tmp = tmp->next)
+	dataFile = fopen(dataFFullName, "a");
+	if (dataFile == NULL)
 	{
-		item = tmp->item;
+		fprintf(stderr, "Error: Failed to open data file.\n");
+		return EX_FILE_OPEN;
+	};
 
-		if (fwrite(item, elemSize, 1, indexFile) != 1)
+	*offset = ftell(devFile);
+
+	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
+	{
+		dev = (zudi::device::_deviceS *)tmp->item;
+
+		// Write the device header out.
+		if (dev->writeOut(devFile, dataFile, strFile) != EX_SUCCESS)
 		{
-			fclose(indexFile);
-			fprintf(stderr, "Error: Failed to write element to "
-				"%s index.\n",
-				fileName);
-
-			return EX_FILE_IO;
+			fprintf(stderr, "Failed to write out device line.\n");
+			break;
 		};
 	};
 
-	fclose(indexFile);
+	fclose(devFile);
+	fclose(dataFile);
+	fclose(strFile);
+	return EX_SUCCESS;
+}
+
+
+static int index_writeProvisions(uint32_t *provOffset)
+{
+	char		*provFFullName=NULL, *stringFFullName=NULL;
+	FILE		*provF, *stringF;
+	listElementS	*tmp;
+	int		err=EX_SUCCESS;
+
+	provFFullName = makeFullName(
+		provFFullName, indexPath, "provisions.zudi-index");
+
+	stringFFullName = makeFullName(
+		stringFFullName, indexPath, "strings.zudi-index");
+
+	if (provFFullName == NULL || stringFFullName == NULL)
+	{
+		fprintf(stderr, "Failed to makeFullName for provision or string index.\n");
+		return EX_NOMEM;
+	};
+
+	provF = fopen(provFFullName, "a");
+	stringF = fopen(stringFFullName, "a");
+	if (provF == NULL || stringF == NULL)
+	{
+		fprintf(stderr, "Failed to open prov or string index.\n");
+		return EX_FILE_OPEN;
+	};
+
+	*provOffset = ftell(provF);
+
+	for (tmp = provisionList; tmp != NULL; tmp = tmp->next)
+	{
+		zudi::driver::_provisionS	*item;
+
+		item = (zudi::driver::_provisionS *)tmp->item;
+		err = item->writeOut(provF, stringF);
+		if (err != EX_SUCCESS)
+		{
+			fprintf(stderr, "Failed to write out item from provisionList.\n");
+			break;
+		};
+	};
+
+	fclose(provF);
+	fclose(stringF);
 	return EX_SUCCESS;
 }
 
@@ -413,10 +429,65 @@ static int index_writeRanks(uint32_t *fileOffset)
 	return EX_SUCCESS;
 }
 
+template <class T>
+static int index_writeListToDisk(
+	listElementS *list, T *type, const char *listName, uint32_t *offset
+	)
+{
+	char		*dataFFullName=NULL, *stringFFullName=NULL;
+	FILE		*dataF, *stringF;
+	listElementS	*tmp;
+	int		err=EX_SUCCESS;
+
+	dataFFullName = makeFullName(
+		dataFFullName, indexPath, "driver-data.zudi-index");
+
+	stringFFullName = makeFullName(
+		stringFFullName, indexPath, "strings.zudi-index");
+
+	if (dataFFullName == NULL || stringFFullName == NULL)
+	{
+		fprintf(stderr, "Failed to makeFullName for data or string index.\n");
+		return EX_NOMEM;
+	};
+
+	dataF = fopen(dataFFullName, "a");
+	stringF = fopen(stringFFullName, "a");
+	if (dataF == NULL || stringF == NULL)
+	{
+		fprintf(stderr, "Failed to open data or string index.\n");
+		return EX_FILE_OPEN;
+	};
+
+	*offset = ftell(dataF);
+
+	for (tmp = list; tmp != NULL; tmp = tmp->next)
+	{
+		T		*item;
+
+		item = (T *)tmp->item;
+		err = item->writeOut(dataF, stringF);
+		if (err != EX_SUCCESS)
+		{
+			fprintf(stderr, "Failed to write out object from %s list.\n",
+				listName);
+
+			break;
+		};
+	};
+
+	fclose(dataF);
+	fclose(stringF);
+	return EX_SUCCESS;
+}
+
 int index_writeToDisk(void)
 {
 	int		ret;
-	uint32_t	driverDataFileOffset, rankFileOffset, deviceFileOffset;
+	uint32_t	driverDataFileOffset, rankFileOffset, deviceFileOffset,
+			provisionFileOffset, offsetTmp;
+	void		*dummy;
+
 	/* 1. Read the index header and get the endianness of the index.
 	 * 2. Find the next driver ID.
 	 * 3. Write the driver to the index at the end in append mode.
@@ -434,40 +505,319 @@ int index_writeToDisk(void)
 	if ((ret = index_writeDevices(&deviceFileOffset)) != EX_SUCCESS)
 		{ return ret; };
 
+	if ((ret = index_writeProvisions(&provisionFileOffset)) != EX_SUCCESS)
+		{ return ret; };
+
 	parser_getCurrentDriverState()->h.dataFileOffset = driverDataFileOffset;
 	parser_getCurrentDriverState()->h.rankFileOffset = rankFileOffset;
 	parser_getCurrentDriverState()->h.deviceFileOffset = deviceFileOffset;
+	parser_getCurrentDriverState()->h.provisionFileOffset =
+		provisionFileOffset;
+
+	if ((ret = index_writeListToDisk(
+		regionList, (struct zudi::driver::regionS *)dummy,
+		"regions", &offsetTmp)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.regionsOffset = offsetTmp;
+
+	if ((ret = index_writeListToDisk(
+		messageList, (struct zudi::driver::_messageS *)dummy,
+		"message", &offsetTmp)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.messagesOffset = offsetTmp;
+
+	if ((ret = index_writeListToDisk(
+		disasterMessageList, (struct zudi::driver::_disasterMessageS *)dummy,
+		"disaster-message", &offsetTmp)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.disasterMessagesOffset = offsetTmp;
+
+	if ((ret = index_writeListToDisk(
+		messageFileList, (struct zudi::driver::_messageFileS *)dummy,
+		"message-file", &offsetTmp)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.messageFilesOffset = offsetTmp;
+
+	if ((ret = index_writeListToDisk(
+		readableFileList, (struct zudi::driver::_readableFileS *)dummy,
+		"readable-file", &offsetTmp)) != EX_SUCCESS)
+		{ return ret; };
+
+	parser_getCurrentDriverState()->h.readableFilesOffset = offsetTmp;
 
 	if ((ret = index_writeDriverHeader()) != EX_SUCCESS) { return ret; };
-	if ((ret = index_writeListToDisk(
-		regionList, "regions.zudi-index",
-		sizeof(struct zudi::regionS))) != EX_SUCCESS)
-		{ return ret; };
 
-	if ((ret = index_writeListToDisk(
-		messageList, "messages.zudi-index",
-		sizeof(struct zudi::messageS))) != EX_SUCCESS)
-		{ return ret; };
+	return EX_SUCCESS;
+}
 
-	if ((ret = index_writeListToDisk(
-		disasterMessageList, "disaster-messages.zudi-index",
-		sizeof(struct zudi::disasterMessageS))) != EX_SUCCESS)
-		{ return ret; };
+int zudi::device::_deviceS::writeOut(FILE *headerF, FILE *dataF, FILE *stringF)
+{
+	int		ret;
 
-	if ((ret = index_writeListToDisk(
-		messageFileList, "message-files.zudi-index",
-		sizeof(struct zudi::messageFileS))) != EX_SUCCESS)
-		{ return ret; };
+	h.dataOff = ftell(dataF);
 
-	if ((ret = index_writeListToDisk(
-		readableFileList, "readable-files.zudi-index",
-		sizeof(struct zudi::readableFileS))) != EX_SUCCESS)
-		{ return ret; };
+	for (int i=0; i<h.nAttributes; i++)
+	{
+		ret = d[i].writeOut(dataF, stringF);
+		if (ret != EX_SUCCESS) { return ret; };
+	};
 
-	if ((ret = index_writeListToDisk(
-		provisionList, "provisions.zudi-index",
-		sizeof(struct zudi::provisionS))) != EX_SUCCESS)
-		{ return ret; };
+	if (fwrite(&h, sizeof(h), 1, headerF) < 1)
+	{
+		fprintf(stderr, "Failed to write out device header.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
+{
+	zudi::device::attrDataS		tmp;
+
+	tmp.type = type;
+	tmp.size = size;
+
+	tmp.nameOff = ftell(stringfile);
+	if (fputs(name, stringfile) < 0 || fputc('\0', stringfile) != '\0')
+	{
+		fprintf(stderr, "Failed to write string to stringfile.\n");
+		return EX_FILE_IO;
+	};
+
+	int	writeLen=0, err;
+
+	switch (type)
+	{
+	case zudi::device::ATTR_STRING:
+	case zudi::device::ATTR_ARRAY8:
+		if (type == zudi::device::ATTR_STRING)
+		{
+			writeLen = strlen(value.string) + 1;
+			tmp.value.stringOff = ftell(stringfile);
+		}
+		else
+		{
+			writeLen = size;
+			tmp.value.array8Off = ftell(stringfile);
+		};
+
+		err = fwrite(
+			value.array8, sizeof(*value.array8), writeLen,
+			stringfile);
+
+		break;
+
+	case zudi::device::ATTR_BOOL:
+		tmp.value.boolval = value.boolval;
+		break;
+
+	case zudi::device::ATTR_UBIT32:
+		tmp.value.u32val = value.u32val;
+		break;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, outfile) < 1)
+	{
+		fprintf(stderr, "Failed to write out device attrib.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_requirementS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::requirementS	tmp;
+
+	tmp.version = version;
+	tmp.nameOff = ftell(stringF);
+
+	if (fwrite(name, strlen(name) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out requirement name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out requirement.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_metalanguageS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::metalanguageS	tmp;
+
+	tmp.index = index;
+	tmp.nameOff = ftell(stringF);
+
+	if (fwrite(name, strlen(name) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out metalanguage name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out requirement.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_moduleS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::moduleS	tmp;
+
+	tmp.index = index;
+	tmp.fileNameOff = ftell(stringF);
+
+	if (fwrite(fileName, strlen(fileName) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out module name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out module.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_messageS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::messageS	tmp;
+
+	tmp.driverId = driverId;
+	tmp.index = index;
+	tmp.messageOff = ftell(stringF);
+
+	if (fwrite(message, strlen(message) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out message string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out message.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_messageFileS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::messageFileS	tmp;
+
+	tmp.driverId = driverId;
+	tmp.index = index;
+	tmp.fileNameOff = ftell(stringF);
+
+	if (fwrite(fileName, strlen(fileName) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out message file name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out message file.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_disasterMessageS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::disasterMessageS	tmp;
+
+	tmp.driverId = driverId;
+	tmp.index = index;
+	tmp.messageOff = ftell(stringF);
+
+	if (fwrite(message, strlen(message) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out disaster message string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out disaster message.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_readableFileS::writeOut(FILE *dataF, FILE *stringF)
+{
+	zudi::driver::readableFileS	tmp;
+
+	tmp.driverId = driverId;
+	tmp.index = index;
+	tmp.fileNameOff = ftell(stringF);
+
+	if (fwrite(fileName, strlen(fileName) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out readable file name string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out readable file.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::_provisionS::writeOut(FILE *provF, FILE *stringF)
+{
+	zudi::driver::provisionS	tmp;
+
+	tmp.driverId = driverId;
+	tmp.version = version;
+	tmp.nameOff = ftell(stringF);
+
+	if (fwrite(name, strlen(name) + 1, 1, stringF) < 1)
+	{
+		fprintf(stderr, "Failed to write out provision string.\n");
+		return EX_FILE_IO;
+	};
+
+	if (fwrite(&tmp, sizeof(tmp), 1, provF) < 1)
+	{
+		fprintf(stderr, "Failed to write out provision.\n");
+		return EX_FILE_IO;
+	};
+
+	return EX_SUCCESS;
+}
+
+int zudi::driver::regionS::writeOut(FILE *dataF, FILE *stringF)
+{
+	if (fwrite(this, sizeof(*this), 1, dataF) < 1)
+	{
+		fprintf(stderr, "Failed to write out region.\n");
+		return EX_FILE_IO;
+	};
 
 	return EX_SUCCESS;
 }

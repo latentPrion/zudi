@@ -210,11 +210,8 @@ char *makeFullName(
 
 const char		*indexFileNames[] =
 {
-	"driver-headers.zudi-index", "driver-data.zudi-index",
-	"devices.zudi-index",
-	"message-files.zudi-index", "readable-files.zudi-index",
-	"regions.zudi-index",
-	"messages.zudi-index", "disaster-messages.zudi-index",
+	"drivers.zudi-index", "driver-data.zudi-index",
+	"devices.zudi-index", "strings.zudi-index",
 	"ranks.zudi-index", "provisions.zudi-index",
 	// Terminate this list with a NULL always.
 	NULL
@@ -261,7 +258,7 @@ static int createMode(int argc, char **argv)
 			return EX_FILE_OPEN;
 		};
 
-		if (strcmp(indexFileNames[i], "driver-headers.zudi-index") != 0)
+		if (strcmp(indexFileNames[i], "drivers.zudi-index") != 0)
 		{
 			fclose(currFile);
 			continue;
@@ -482,7 +479,7 @@ int incrementNRecords(void)
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
-		fullName, indexPath, "driver-headers.zudi-index");
+		fullName, indexPath, "drivers.zudi-index");
 
 	if (fullName == NULL) { return EX_NOMEM; };
 
@@ -524,7 +521,7 @@ static int getNextDriverId(uint32_t *driverId)
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
-		fullName, indexPath, "driver-headers.zudi-index");
+		fullName, indexPath, "drivers.zudi-index");
 
 	if (fullName == NULL) { return 0; };
 
@@ -662,8 +659,8 @@ int main(int argc, char **argv)
 			sizeof(struct zudi::headerS),
 			sizeof(struct zudi::device::headerS),
 			sizeof(struct zudi::driver::headerS),
-			sizeof(struct zudi::regionS),
-			sizeof(struct zudi::messageS));
+			sizeof(struct zudi::driver::regionS),
+			sizeof(struct zudi::driver::messageS));
 
 		exit(EXIT_SUCCESS);
 	};

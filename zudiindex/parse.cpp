@@ -115,10 +115,10 @@ static inline int hasSlashes(const char *str)
 
 static void *parseMessage(const char *line)
 {
-	struct zudi::messageS	*ret;
+	struct zudi::driver::_messageS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::messageS);
+	PARSER_MALLOC(&ret, struct zudi::driver::_messageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -145,10 +145,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseDisasterMessage(const char *line)
 {
-	struct zudi::disasterMessageS	*ret;
+	struct zudi::driver::_disasterMessageS	*ret;
 	char					*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::disasterMessageS);
+	PARSER_MALLOC(&ret, struct zudi::driver::_disasterMessageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -175,9 +175,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseMessageFile(const char *line)
 {
-	struct zudi::messageFileS	*ret;
+	struct zudi::driver::_messageFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudi::messageFileS);
+	PARSER_MALLOC(&ret, struct zudi::driver::_messageFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -198,9 +198,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseReadableFile(const char *line)
 {
-	struct zudi::readableFileS	*ret;
+	struct zudi::driver::_readableFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudi::readableFileS);
+	PARSER_MALLOC(&ret, struct zudi::driver::_readableFileS);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -619,7 +619,7 @@ static int parseModule(const char *line)
 }
 
 static const char *parseRegionAttribute(
-	struct zudi::regionS *r, const char *line, int *status
+	struct zudi::driver::regionS *r, const char *line, int *status
 	)
 {
 	char			*white;
@@ -670,13 +670,13 @@ static const char *parseRegionAttribute(
 		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		if (!strncmp(line, "lo", strlen("lo"))) {
-			r->priority = zudi::REGION_PRIO_LOW; goto success;
+			r->priority = zudi::driver::REGION_PRIO_LOW; goto success;
 		};
 		if (!strncmp(line, "med", strlen("med"))) {
-			r->priority = zudi::REGION_PRIO_MEDIUM; goto success;
+			r->priority = zudi::driver::REGION_PRIO_MEDIUM; goto success;
 		};
 		if (!strncmp(line, "hi", strlen("hi"))) {
-			r->priority = zudi::REGION_PRIO_HIGH; goto success;
+			r->priority = zudi::driver::REGION_PRIO_HIGH; goto success;
 		};
 
 		printf("Error: Invalid value for region attribute "
@@ -714,11 +714,11 @@ fail:
 
 static void *parseRegion(const char *line)
 {
-	struct zudi::regionS	*ret;
+	struct zudi::driver::regionS	*ret;
 	char				*tmp;
 	int				status;
 
-	PARSER_MALLOC(&ret, struct zudi::regionS);
+	PARSER_MALLOC(&ret, struct zudi::driver::regionS);
 	line = skipWhitespaceIn(line);
 
 	ret->driverId = currentDriver->h.id;
@@ -782,7 +782,7 @@ static uint8_t getDigit(const char c)
 }
 
 static const char *parseDeviceAttribute(
-	struct zudi::device::deviceS *d, const char *line, int *status
+	struct zudi::device::_deviceS *d, const char *line, int *status
 	)
 {
 	char		*white;
@@ -896,11 +896,11 @@ success:
 
 static void *parseDevice(const char *line)
 {
-	struct zudi::device::deviceS	*ret;
+	struct zudi::device::_deviceS	*ret;
 	char				*tmp;
 	int				status, i, j, printLen;
 
-	PARSER_MALLOC(&ret, struct zudi::device::deviceS);
+	PARSER_MALLOC(&ret, struct zudi::device::_deviceS);
 	ret->h.index = currentDriver->h.nDevices;
 	line = skipWhitespaceIn(line);
 	ret->h.messageIndex = strtoul(line, &tmp, 10);
@@ -988,10 +988,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseProvides(const char *line)
 {
-	struct zudi::provisionS	*ret;
+	struct zudi::driver::_provisionS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::provisionS);
+	PARSER_MALLOC(&ret, struct zudi::driver::_provisionS);
 
 	line = skipWhitespaceIn(line);
 	tmp = findWhitespaceAfter(line);
@@ -1023,7 +1023,7 @@ static int parseRankAttribute(struct zudi::rank::rankS *rank, const char *line)
 	char		*white;
 
 	white = findWhitespaceAfter(line);
-	if (strlenUpToWhitespace(line, white) >= ZUDI_RANK_ATTR_NAME_MAXLEN)
+	if (strlenUpToWhitespace(line, white) >= UDI_MAX_ATTR_NAMELEN)
 		{ return 0; };
 
 	strcpyUpToWhitespace(rank->d[rank->h.nAttributes].name, line, white);

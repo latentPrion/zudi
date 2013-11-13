@@ -34,15 +34,34 @@ namespace zudi
 			uint16_t	index;
 			uint16_t	messageIndex, metaIndex;
 			uint8_t		nAttributes;
-			// uint32_t	dataFileOffset;
+			uint32_t	dataOff;
 		};
 
 		enum attrTypeE {
-			ATTR_STRING=0, ATTR_UBIT32, ATTR_BOOL, ATTR_ARRAY8 };
+			ATTR_NONE=UDI_ATTR_NONE,
+			ATTR_STRING=UDI_ATTR_STRING,
+			ATTR_UBIT32=UDI_ATTR_UBIT32,
+			ATTR_BOOL=UDI_ATTR_BOOLEAN,
+			ATTR_ARRAY8=UDI_ATTR_ARRAY8,
+			ATTR_FILE=UDI_ATTR_FILE };
 
-		#define ZUDI_DEVICE_MAX_NATTRS		(20)
 		struct attrDataS
 		{
+			uint8_t		type, size;
+			uint32_t	nameOff;
+			union
+			{
+				uint32_t	stringOff;
+				uint32_t	array8Off;
+				uint32_t	u32val;
+				uint8_t		boolval;
+			} value;
+		};
+
+		struct _attrDataS
+		{
+			int writeOut(FILE *outfile, FILE *stringfile);
+
 			uint8_t		type, size;
 			char		name[UDI_MAX_ATTR_NAMELEN];
 			union
@@ -54,10 +73,15 @@ namespace zudi
 			} value;
 		};
 
-		struct deviceS
+		#define ZUDI_DEVICE_MAX_NATTRS		(20)
+		struct _deviceS
 		{
+			int  writeOut(
+				FILE *headerfile, FILE *datafile,
+				FILE *strings);
+
 			struct headerS		h;
-			struct attrDataS	d[ZUDI_DEVICE_MAX_NATTRS];
+			struct _attrDataS	d[ZUDI_DEVICE_MAX_NATTRS];
 		};
 	}
 
@@ -85,7 +109,7 @@ namespace zudi
 			 * rankFileOffset is the offset within ranks.zudi-index.
 			 **/
 			uint32_t	dataFileOffset, rankFileOffset,
-					deviceFileOffset;
+					deviceFileOffset, provisionFileOffset;
 			uint8_t		nMetalanguages, nChildBops, nParentBops,
 					nInternalBops,
 					nModules, nRequirements,
@@ -95,7 +119,10 @@ namespace zudi
 
 			uint32_t	requirementsOffset, metalanguagesOffset,
 					childBopsOffset, parentBopsOffset,
-					internalBopsOffset, modulesOffset;
+					internalBopsOffset, modulesOffset,
+					regionsOffset, messagesOffset,
+					disasterMessagesOffset,
+					messageFilesOffset, readableFilesOffset;
 		};
 
 		#define ZUDI_DRIVER_MAX_NREQUIREMENTS		(16)
@@ -109,120 +136,210 @@ namespace zudi
 		#define ZUDI_DRIVER_REQUIREMENT_MAXLEN		\
 					(ZUDI_DRIVER_METALANGUAGE_MAXLEN)
 
+		struct requirementS
+		{
+			uint32_t	version;
+			uint32_t	nameOff;
+		};
+
+		struct _requirementS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	version;
+			char		name[ZUDI_DRIVER_REQUIREMENT_MAXLEN];
+		};
+
+		struct metalanguageS
+		{
+			uint16_t	index;
+			uint32_t	nameOff;
+		};
+
+		struct _metalanguageS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint16_t	index;
+			char		name[ZUDI_DRIVER_METALANGUAGE_MAXLEN];
+		};
+
+		struct childBopS
+		{
+			uint16_t	metaIndex, regionIndex, opsIndex;
+		};
+
+		struct parentBopS
+		{
+			uint16_t	metaIndex, regionIndex, opsIndex,
+					bindCbIndex;
+		};
+
+		struct internalBopS
+		{
+			uint16_t	metaIndex, regionIndex,
+					opsIndex0, opsIndex1, bindCbIndex;
+		};
+
+		struct moduleS
+		{
+			uint16_t	index;
+			uint32_t	fileNameOff;
+		};
+
+		struct _moduleS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint16_t	index;
+			char		fileName[ZUDI_FILENAME_MAXLEN];
+		};
+
+		enum regionPrioE {
+			REGION_PRIO_LOW=0, REGION_PRIO_MEDIUM, REGION_PRIO_HIGH };
+
+		enum regionLatencyE {
+			REGION_LAT_NON_CRITICAL=0, REGION_LAT_NON_OVER,
+			REGION_LAT_RETRY, REGION_LAT_OVER,
+			REGION_LAT_POWERFAIL_WARN };
+
+		#define	ZUDI_REGION_FLAGS_FP		(1<<0)
+		#define	ZUDI_REGION_FLAGS_DYNAMIC	(1<<1)
+		#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
+		struct regionS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	driverId;
+			uint16_t	index, moduleIndex;
+			uint8_t		priority;
+			uint8_t		latency;
+			uint32_t	flags;
+		};
+
+		struct messageS
+		{
+			uint32_t	driverId;
+			uint16_t	index;
+			uint32_t	messageOff;
+		};
+
+		struct _messageS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	driverId;
+			uint16_t	index;
+			char		message[ZUDI_MESSAGE_MAXLEN];
+		};
+
+		struct disasterMessageS
+		{
+			uint32_t	driverId;
+			uint16_t	index;
+			uint32_t	messageOff;
+		};
+
+		struct _disasterMessageS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	driverId;
+			uint16_t	index;
+			char		message[ZUDI_MESSAGE_MAXLEN];
+		};
+
+		struct messageFileS
+		{
+			uint32_t	driverId;
+			uint16_t	index;
+			uint32_t	fileNameOff;
+		};
+
+		struct _messageFileS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	driverId;
+			uint16_t	index;
+			char		fileName[ZUDI_FILENAME_MAXLEN];
+		};
+
+		struct readableFileS
+		{
+			uint16_t	driverId, index;
+			uint32_t	fileNameOff;
+		};
+
+		struct _readableFileS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint16_t	driverId, index;
+			char		fileName[ZUDI_FILENAME_MAXLEN];
+		};
+
+		struct provisionS
+		{
+			uint32_t	driverId;
+			uint32_t	version;
+			uint32_t	nameOff;
+		};
+
+		#define ZUDI_PROVISION_NAME_MAXLEN	(ZUDI_DRIVER_METALANGUAGE_MAXLEN)
+		struct _provisionS
+		{
+			int writeOut(FILE *dataF, FILE *stringF);
+
+			uint32_t	driverId;
+			uint32_t	version;
+			char		name[ZUDI_PROVISION_NAME_MAXLEN];
+		};
+
 		struct driverS
 		{
 			struct zudi::driver::headerS	h;
-			struct requirementS
-			{
-				uint32_t	version;
-				char		name[ZUDI_DRIVER_REQUIREMENT_MAXLEN];
-			} requirements[ZUDI_DRIVER_MAX_NREQUIREMENTS];
+			struct _requirementS		requirements[
+				ZUDI_DRIVER_MAX_NREQUIREMENTS];
 
-			struct metalanguageS
-			{
-				uint16_t	index;
-				char		name[ZUDI_DRIVER_METALANGUAGE_MAXLEN];
-			} metalanguages[ZUDI_DRIVER_MAX_NMETALANGUAGES];
+			struct _metalanguageS		metalanguages[
+				ZUDI_DRIVER_MAX_NMETALANGUAGES];
 
-			struct childBopS
-			{
-				uint16_t	metaIndex, regionIndex, opsIndex;
-			} childBops[ZUDI_DRIVER_MAX_NCHILD_BOPS];
+			struct childBopS		childBops[
+				ZUDI_DRIVER_MAX_NCHILD_BOPS];
 
-			struct parentBopS
-			{
-				uint16_t	metaIndex, regionIndex, opsIndex,
-						bindCbIndex;
-			} parentBops[ZUDI_DRIVER_MAX_NPARENT_BOPS];
+			struct parentBopS		parentBops[
+				ZUDI_DRIVER_MAX_NPARENT_BOPS];
 
-			struct internalBopS
-			{
-				uint16_t	metaIndex, regionIndex,
-						opsIndex0, opsIndex1, bindCbIndex;
-			} internalBops[ZUDI_DRIVER_MAX_NINTERNAL_BOPS];
+			struct internalBopS		internalBops[
+				ZUDI_DRIVER_MAX_NINTERNAL_BOPS];
 
-			struct moduleS
-			{
-				uint16_t	index;
-				char		fileName[ZUDI_FILENAME_MAXLEN];
-			} modules[ZUDI_DRIVER_MAX_NMODULES];
+			struct _moduleS			modules[
+				ZUDI_DRIVER_MAX_NMODULES];
 		};
 	}
-
-	enum regionPrioE {
-		REGION_PRIO_LOW=0, REGION_PRIO_MEDIUM, REGION_PRIO_HIGH };
-
-	enum regionLatencyE {
-		REGION_LAT_NON_CRITICAL=0, REGION_LAT_NON_OVER,
-		REGION_LAT_RETRY, REGION_LAT_OVER,
-		REGION_LAT_POWERFAIL_WARN };
-
-	#define	ZUDI_REGION_FLAGS_FP		(1<<0)
-	#define	ZUDI_REGION_FLAGS_DYNAMIC	(1<<1)
-	#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
-	struct regionS
-	{
-		uint32_t	driverId;
-		uint16_t	index, moduleIndex;
-		uint8_t		priority;
-		uint8_t		latency;
-		uint32_t	flags;
-	};
-
-	struct messageS
-	{
-		uint32_t	driverId;
-		uint16_t	index;
-		char		message[ZUDI_MESSAGE_MAXLEN];
-	};
-
-	struct disasterMessageS
-	{
-		uint32_t	driverId;
-		uint16_t	index;
-		char		message[ZUDI_MESSAGE_MAXLEN];
-	};
-
-	struct messageFileS
-	{
-		uint32_t	driverId;
-		uint16_t	index;
-		char		fileName[ZUDI_FILENAME_MAXLEN];
-	};
-
-	struct readableFileS
-	{
-		uint16_t	driverId, index;
-		char		fileName[ZUDI_FILENAME_MAXLEN];
-	};
-
-	#define ZUDI_PROVISION_NAME_MAXLEN	(ZUDI_DRIVER_METALANGUAGE_MAXLEN)
-	struct provisionS
-	{
-		uint32_t	driverId;
-		uint32_t	version;
-		char		name[ZUDI_PROVISION_NAME_MAXLEN];
-	};
 
 	namespace rank
 	{
 		#define ZUDI_RANK_MAX_NATTRS		(ZUDI_DEVICE_MAX_NATTRS)
-		#define ZUDI_RANK_ATTR_NAME_MAXLEN	(UDI_MAX_ATTR_NAMELEN)
 		struct headerS
 		{
 			uint32_t	driverId;
 			uint8_t		nAttributes, rank;
+			uint32_t	dataOff;
 		};
 
-		struct rankAttrS
+		struct _rankAttrS
 		{
-			char		name[ZUDI_RANK_ATTR_NAME_MAXLEN];
+			char		name[UDI_MAX_ATTR_NAMELEN];
 		};
 
 		struct rankS
 		{
+			int writeOut(FILE *outfile, FILE *stringfile);
+
 			struct zudi::rank::headerS	h;
-			struct zudi::rank::rankAttrS	d[ZUDI_RANK_MAX_NATTRS];
+			struct zudi::rank::_rankAttrS	d[ZUDI_RANK_MAX_NATTRS];
 		};
 	}
 }
