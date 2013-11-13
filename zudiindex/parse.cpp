@@ -797,7 +797,7 @@ static const char *parseDeviceAttribute(
 		{ goto fail; };
 
 	strcpyUpToWhitespace(
-		d->d[d->h.nAttributes].name,
+		d->d[d->h.nAttributes].attr_name,
 		line, white);
 
 	// Get the attribute type.
@@ -806,7 +806,7 @@ static const char *parseDeviceAttribute(
 	if (white == NULL) { goto fail; };
 
 	if (!strncmp(line, "string", strlen("string"))) {
-		d->d[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].attr_type =
 			zudi::device::ATTR_STRING;
 
 		line = skipWhitespaceIn(white);
@@ -817,19 +817,22 @@ static const char *parseDeviceAttribute(
 			{ goto fail; };
 
 		strcpyUpToWhitespace(
-			d->d[d->h.nAttributes].value.string,
+			(char *)d->d[d->h.nAttributes].attr_value,
 			line, white);
 
 		goto success;
 	};
 
 	if (!strncmp(line, "ubit32", strlen("ubit32"))) {
-		d->d[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].attr_type =
 			zudi::device::ATTR_UBIT32;
 
 		line = skipWhitespaceIn(white);
-		d->d[d->h.nAttributes].value.u32val =
-			strtoul(line, &white, 0);
+//		d->d[d->h.nAttributes].value.u32val =
+//			strtoul(line, &white, 0);
+		UDI_ATTR32_SET(
+			d->d[d->h.nAttributes].attr_value,
+			strtoul(line, &white, 0));
 
 		if (line == white) { goto fail; };
 
@@ -839,12 +842,12 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "boolean", strlen("boolean"))) {
-		d->d[d->h.nAttributes].type = zudi::device::ATTR_BOOL;
+		d->d[d->h.nAttributes].attr_type = zudi::device::ATTR_BOOL;
 		line = skipWhitespaceIn(white);
 		if (*line == 't' || *line == 'T') {
-			d->d[d->h.nAttributes].value.boolval = 1;
+			d->d[d->h.nAttributes].attr_value[0] = 1;
 		} else if (*line == 'f' || *line == 'F') {
-			d->d[d->h.nAttributes].value.boolval = 0;
+			d->d[d->h.nAttributes].attr_value[0] = 0;
 		} else { goto fail; };
 
 		retOffset = 1;
@@ -852,7 +855,7 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "array", strlen("array"))) {
-		d->d[d->h.nAttributes].type =
+		d->d[d->h.nAttributes].attr_type =
 			zudi::device::ATTR_ARRAY8;
 
 		line = skipWhitespaceIn(white);
@@ -868,21 +871,17 @@ static const char *parseDeviceAttribute(
 		{
 			byte = getDigit(line[i]);
 			if (byte > 15) { goto fail; };
-			if (i % 2 == 0)
-			{
-				d->d[d->h.nAttributes].value
-					.array8[j] = byte << 4;
+			if (i % 2 == 0) {
+				d->d[d->h.nAttributes].attr_value[j] = byte << 4;
 			}
 			else
 			{
-				d->d[d->h.nAttributes].value
-					.array8[j] |= byte;
-
+				d->d[d->h.nAttributes].attr_value[j] |= byte;
 				j++;
 			};
 		};
 
-		d->d[d->h.nAttributes].size = j;
+		d->d[d->h.nAttributes].attr_length = j;
 		goto success;
 	};
 fail:
@@ -933,30 +932,29 @@ static void *parseDevice(const char *line)
 		for (i=0; i<ret->h.nAttributes; i++)
 		{
 			printLen += sprintf(&verboseBuff[printLen], ".\n");
-			switch (ret->d[i].type)
+			switch (ret->d[i].attr_type)
 			{
 			case zudi::device::ATTR_STRING:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tSTR %s: \"%s\"",
-					ret->d[i].name,
-					ret->d[i].value.string);
+					ret->d[i].attr_name,
+					ret->d[i].attr_value);
 
 				break;
 			case zudi::device::ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tARR %s: size %d: ",
-					ret->d[i].name,
-					ret->d[i].size);
+					ret->d[i].attr_name,
+					ret->d[i].attr_length);
 
-				for (j=0; j<ret->d[i].size; j++)
+				for (j=0; j<ret->d[i].attr_length; j++)
 				{
 					printLen += sprintf(
 						&verboseBuff[printLen],
 						"%02X",
-						ret->d[i].value
-							.array8[j]);
+						ret->d[i].attr_value[j]);
 				};
 
 				break;
@@ -964,16 +962,16 @@ static void *parseDevice(const char *line)
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tBOOL %s: %d",
-					ret->d[i].name,
-					ret->d[i].value.boolval);
+					ret->d[i].attr_name,
+					ret->d[i].attr_value[0]);
 
 				break;
 			case zudi::device::ATTR_UBIT32:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tU32 %s: 0x%x",
-					ret->d[i].name,
-					ret->d[i].value.u32val);
+					ret->d[i].attr_name,
+					UDI_ATTR32_GET(ret->d[i].attr_value));
 
 				break;
 			};

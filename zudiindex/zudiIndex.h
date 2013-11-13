@@ -1,6 +1,9 @@
 #ifndef _Z_UDI_INDEX_H
 	#define _Z_UDI_INDEX_H
 
+	#define __IS_KERNEL_SOURCE__				\
+		(defined(__ZAMBESII_KERNEL_SOURCE__))
+
 	#define UDI_VERSION	0x101
 	#include <udi.h>
 	#undef UDI_VERSION
@@ -48,38 +51,23 @@ namespace zudi
 
 		struct attrDataS
 		{
-			uint8_t		type, size;
-			uint32_t	nameOff;
-			union
-			{
-				uint32_t	stringOff;
-				uint32_t	array8Off;
-				uint32_t	u32val;
-				uint8_t		boolval;
-			} value;
+			uint8_t		attr_type, attr_length;
+			uint32_t	attr_nameOff, attr_valueOff;
 		};
 
 		struct _attrDataS
+		:
+		public udi_instance_attr_list_t
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *outfile, FILE *stringfile);
 #endif
-
-			uint8_t		type, size;
-			char		name[UDI_MAX_ATTR_NAMELEN];
-			union
-			{
-				char	string[UDI_MAX_ATTR_SIZE];
-				uint8_t	array8[UDI_MAX_ATTR_SIZE];
-				uint32_t	u32val;
-				uint8_t		boolval;
-			} value;
 		};
 
 		#define ZUDI_DEVICE_MAX_NATTRS		(20)
 		struct _deviceS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int  writeOut(
 				FILE *headerfile, FILE *datafile,
 				FILE *strings);
@@ -149,7 +137,7 @@ namespace zudi
 
 		struct _requirementS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -165,7 +153,7 @@ namespace zudi
 
 		struct _metalanguageS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -198,7 +186,7 @@ namespace zudi
 
 		struct _moduleS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -219,7 +207,7 @@ namespace zudi
 		#define	ZUDI_REGION_FLAGS_INTERRUPT	(1<<2)
 		struct regionS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -239,7 +227,7 @@ namespace zudi
 
 		struct _messageS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -257,7 +245,7 @@ namespace zudi
 
 		struct _disasterMessageS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -275,7 +263,7 @@ namespace zudi
 
 		struct _messageFileS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -292,7 +280,7 @@ namespace zudi
 
 		struct _readableFileS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -310,7 +298,7 @@ namespace zudi
 		#define ZUDI_PROVISION_NAME_MAXLEN	(ZUDI_DRIVER_METALANGUAGE_MAXLEN)
 		struct _provisionS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -359,7 +347,7 @@ namespace zudi
 
 		struct _rankAttrS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
 #endif
 
@@ -368,7 +356,7 @@ namespace zudi
 
 		struct _rankS
 		{
-#ifndef __ZAMBESII_KERNEL_SOURCE__
+#if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *rankF, FILE *dataF, FILE *stringF);
 #endif
 
@@ -377,5 +365,6 @@ namespace zudi
 		};
 	}
 }
+
 #endif
 

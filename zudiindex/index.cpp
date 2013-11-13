@@ -572,11 +572,11 @@ int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 {
 	zudi::device::attrDataS		tmp;
 
-	tmp.type = type;
-	tmp.size = size;
+	tmp.attr_type = attr_type;
+	tmp.attr_length = attr_length;
 
-	tmp.nameOff = ftell(stringfile);
-	if (fputs(name, stringfile) < 0 || fputc('\0', stringfile) != '\0')
+	tmp.attr_nameOff = ftell(stringfile);
+	if (fputs(attr_name, stringfile) < 0 || fputc('\0', stringfile) != '\0')
 	{
 		fprintf(stderr, "Failed to write string to stringfile.\n");
 		return EX_FILE_IO;
@@ -584,33 +584,43 @@ int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 
 	int	writeLen=0, err;
 
-	switch (type)
+	switch (attr_type)
 	{
 	case zudi::device::ATTR_STRING:
 	case zudi::device::ATTR_ARRAY8:
-		if (type == zudi::device::ATTR_STRING)
+		if (attr_type == zudi::device::ATTR_STRING)
 		{
-			writeLen = strlen(value.string) + 1;
-			tmp.value.stringOff = ftell(stringfile);
+			writeLen = strlen((const char *)attr_value) + 1;
+			tmp.attr_valueOff = ftell(stringfile);
 		}
 		else
 		{
-			writeLen = size;
-			tmp.value.array8Off = ftell(stringfile);
+			writeLen = attr_length;
+			tmp.attr_valueOff = ftell(stringfile);
 		};
 
 		err = fwrite(
-			value.array8, sizeof(*value.array8), writeLen,
+			attr_value, sizeof(*attr_value), writeLen,
 			stringfile);
+
+		if (err < writeLen)
+		{
+			fprintf(stderr, "Failed to write out array8 attrib to "
+				"string index.\n");
+
+			return EX_FILE_IO;
+		};
 
 		break;
 
 	case zudi::device::ATTR_BOOL:
-		tmp.value.boolval = value.boolval;
+		*(uint8_t *)(&tmp.attr_valueOff) = attr_value[0];
 		break;
 
 	case zudi::device::ATTR_UBIT32:
-		tmp.value.u32val = value.u32val;
+		UDI_ATTR32_SET(
+			(uint8_t *)&tmp.attr_valueOff,
+			UDI_ATTR32_GET(attr_value));
 		break;
 	};
 
