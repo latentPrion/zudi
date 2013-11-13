@@ -210,7 +210,7 @@ char *makeFullName(
 
 const char		*indexFileNames[] =
 {
-	"drivers.zudi-index", "driver-data.zudi-index",
+	"drivers.zudi-index", "data.zudi-index",
 	"devices.zudi-index", "strings.zudi-index",
 	"ranks.zudi-index", "provisions.zudi-index",
 	// Terminate this list with a NULL always.

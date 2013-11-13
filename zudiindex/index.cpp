@@ -146,7 +146,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 					*stringFFullName=NULL;
 
 	driverDataFFullName = makeFullName(
-		driverDataFFullName, indexPath, "driver-data.zudi-index");
+		driverDataFFullName, indexPath, "data.zudi-index");
 	
 	stringFFullName = makeFullName(
 		stringFFullName, indexPath, "strings.zudi-index");
@@ -280,7 +280,7 @@ int index_writeDevices(uint32_t *offset)
 		stringFFullName, indexPath, "strings.zudi-index");
 
 	dataFFullName = makeFullName(
-		dataFFullName, indexPath, "driver-data.zudi-index");
+		dataFFullName, indexPath, "data.zudi-index");
 
 	if (deviceFFullName == NULL || stringFFullName == NULL
 		|| dataFFullName == NULL)
@@ -380,7 +380,7 @@ static int index_writeRanks(uint32_t *fileOffset)
 		rankFFullName, indexPath, "ranks.zudi-index");
 
 	dataFFullName = makeFullName(
-		dataFFullName, indexPath, "driver-data.zudi-index");
+		dataFFullName, indexPath, "data.zudi-index");
 
 	stringFFullName = makeFullName(
 		stringFFullName, indexPath, "strings.zudi-index");
@@ -433,7 +433,7 @@ static int index_writeListToDisk(
 	int		err=EX_SUCCESS;
 
 	dataFFullName = makeFullName(
-		dataFFullName, indexPath, "driver-data.zudi-index");
+		dataFFullName, indexPath, "data.zudi-index");
 
 	stringFFullName = makeFullName(
 		stringFFullName, indexPath, "strings.zudi-index");

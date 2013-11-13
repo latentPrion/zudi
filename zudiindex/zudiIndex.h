@@ -90,7 +90,7 @@ namespace zudi
 			uint32_t	requiredUdiVersion;
 			char		basePath[ZUDI_DRIVER_BASEPATH_MAXLEN];
 
-			/* dataFileOffset is the offset within driver-data.zudi-index.
+			/* dataFileOffset is the offset within data.zudi-index.
 			 * rankFileOffset is the offset within ranks.zudi-index.
 			 **/
 			uint32_t	dataFileOffset, rankFileOffset,
