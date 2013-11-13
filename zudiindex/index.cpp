@@ -586,9 +586,9 @@ int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 
 	switch (attr_type)
 	{
-	case zudi::device::ATTR_STRING:
-	case zudi::device::ATTR_ARRAY8:
-		if (attr_type == zudi::device::ATTR_STRING)
+	case UDI_ATTR_STRING:
+	case UDI_ATTR_ARRAY8:
+		if (attr_type == UDI_ATTR_STRING)
 		{
 			writeLen = strlen((const char *)attr_value) + 1;
 			tmp.attr_valueOff = ftell(stringfile);
@@ -613,11 +613,11 @@ int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 
 		break;
 
-	case zudi::device::ATTR_BOOL:
+	case UDI_ATTR_BOOLEAN:
 		*(uint8_t *)(&tmp.attr_valueOff) = attr_value[0];
 		break;
 
-	case zudi::device::ATTR_UBIT32:
+	case UDI_ATTR_UBIT32:
 		UDI_ATTR32_SET(
 			(uint8_t *)&tmp.attr_valueOff,
 			UDI_ATTR32_GET(attr_value));

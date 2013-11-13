@@ -41,14 +41,6 @@ namespace zudi
 			uint32_t	dataOff;
 		};
 
-		enum attrTypeE {
-			ATTR_NONE=UDI_ATTR_NONE,
-			ATTR_STRING=UDI_ATTR_STRING,
-			ATTR_UBIT32=UDI_ATTR_UBIT32,
-			ATTR_BOOL=UDI_ATTR_BOOLEAN,
-			ATTR_ARRAY8=UDI_ATTR_ARRAY8,
-			ATTR_FILE=UDI_ATTR_FILE };
-
 		struct attrDataS
 		{
 			uint8_t		attr_type, attr_length;

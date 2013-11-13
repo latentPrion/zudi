@@ -807,7 +807,7 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "string", strlen("string"))) {
 		d->d[d->h.nAttributes].attr_type =
-			zudi::device::ATTR_STRING;
+			UDI_ATTR_STRING;
 
 		line = skipWhitespaceIn(white);
 
@@ -825,7 +825,7 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "ubit32", strlen("ubit32"))) {
 		d->d[d->h.nAttributes].attr_type =
-			zudi::device::ATTR_UBIT32;
+			UDI_ATTR_UBIT32;
 
 		line = skipWhitespaceIn(white);
 //		d->d[d->h.nAttributes].value.u32val =
@@ -842,7 +842,7 @@ static const char *parseDeviceAttribute(
 	};
 
 	if (!strncmp(line, "boolean", strlen("boolean"))) {
-		d->d[d->h.nAttributes].attr_type = zudi::device::ATTR_BOOL;
+		d->d[d->h.nAttributes].attr_type = UDI_ATTR_BOOLEAN;
 		line = skipWhitespaceIn(white);
 		if (*line == 't' || *line == 'T') {
 			d->d[d->h.nAttributes].attr_value[0] = 1;
@@ -856,7 +856,7 @@ static const char *parseDeviceAttribute(
 
 	if (!strncmp(line, "array", strlen("array"))) {
 		d->d[d->h.nAttributes].attr_type =
-			zudi::device::ATTR_ARRAY8;
+			UDI_ATTR_ARRAY8;
 
 		line = skipWhitespaceIn(white);
 
@@ -934,7 +934,7 @@ static void *parseDevice(const char *line)
 			printLen += sprintf(&verboseBuff[printLen], ".\n");
 			switch (ret->d[i].attr_type)
 			{
-			case zudi::device::ATTR_STRING:
+			case UDI_ATTR_STRING:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tSTR %s: \"%s\"",
@@ -942,7 +942,7 @@ static void *parseDevice(const char *line)
 					ret->d[i].attr_value);
 
 				break;
-			case zudi::device::ATTR_ARRAY8:
+			case UDI_ATTR_ARRAY8:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tARR %s: size %d: ",
@@ -958,7 +958,7 @@ static void *parseDevice(const char *line)
 				};
 
 				break;
-			case zudi::device::ATTR_BOOL:
+			case UDI_ATTR_BOOLEAN:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tBOOL %s: %d",
@@ -966,7 +966,7 @@ static void *parseDevice(const char *line)
 					ret->d[i].attr_value[0]);
 
 				break;
-			case zudi::device::ATTR_UBIT32:
+			case UDI_ATTR_UBIT32:
 				printLen += sprintf(
 					&verboseBuff[printLen],
 					"\tU32 %s: 0x%x",
