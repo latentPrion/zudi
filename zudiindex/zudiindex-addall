@@ -5,11 +5,12 @@ set -e
 wildcard=""
 propsDir="."
 indexDir=""
-usageMessage="`echo \"	$0 -<drivers|metas> [directory]\"`"
+usageMessage="`echo \"	$0 -<drivers|metas> [search-directory] [index-path]\"`"
 
 case "$1" in
 	"-drivers") wildcard='*.udidprops';;
 	"-metas") wildcard='*.udimprops';;
+	"--help") echo "$usageMessage"; exit 0;;
 	*) echo "$usageMessage"; exit 1;;
 esac
 
@@ -38,8 +39,10 @@ else
 	for i in $files; do
 		if [ -n "$indexDir" ]
 		then zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i "$indexDir"
-		else zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i
+		else zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath
 		fi
 	done
 fi
+
+exit 0;
 
