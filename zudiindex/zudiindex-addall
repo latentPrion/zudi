@@ -5,7 +5,7 @@ set -e
 wildcard=""
 propsDir="."
 indexDir=""
-usageMessage="`echo \"	$0 -<drivers|metas> [search-directory] [index-path]\"`"
+usageMessage="`echo \"$0 -<drivers|metas> [search-directory] [index-path]\"`"
 
 case "$1" in
 	"-drivers") wildcard='*.udidprops';;
