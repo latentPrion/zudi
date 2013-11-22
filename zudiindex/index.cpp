@@ -576,7 +576,7 @@ int zudi::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 	tmp.attr_length = attr_length;
 
 	tmp.attr_nameOff = ftell(stringfile);
-	if (fputs(attr_name, stringfile) < 0 || fputc('\0', stringfile) != '\0')
+	if (fwrite(attr_name, strlen(attr_name) + 1, 1, stringfile) < 1)
 	{
 		fprintf(stderr, "Failed to write string to stringfile.\n");
 		return EX_FILE_IO;
@@ -833,7 +833,7 @@ int zudi::rank::_rankS::writeOut(FILE *rankF, FILE *dataF, FILE *stringF)
 
 	for (int i=0; i<h.nAttributes; i++)
 	{
-		err = d->writeOut(dataF, stringF);
+		err = d[i].writeOut(dataF, stringF);
 		if (err != EX_SUCCESS) { return err; };
 	};
 
