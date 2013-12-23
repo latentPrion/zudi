@@ -170,6 +170,9 @@ static int index_writeDriverData(uint32_t *fileOffset)
 	*fileOffset = ftell(ddFile);
 	dStruct = parser_getCurrentDriverState();
 
+	if (verboseMode)
+		{ fwrite("::MODULES::", strlen("::MODULES::")+1, 1, strFile); };
+
 	dStruct->h.modulesOffset = ftell(ddFile);
 	// First write out the modules.
 	for (i=0; i<dStruct->h.nModules; i++)
@@ -181,6 +184,9 @@ static int index_writeDriverData(uint32_t *fileOffset)
 			return EX_FILE_IO;
 		};
 	};
+
+	if (verboseMode)
+		{ fwrite("::REQUIREMENTS::", strlen("::REQUIREMENTS::")+1, 1, strFile); };
 
 	dStruct->h.requirementsOffset = ftell(ddFile);
 	// Then write out the requirements.
@@ -196,6 +202,9 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	if (verboseMode)
+		{ fwrite("::METAS::", strlen("::METAS::")+1, 1, strFile); };
+
 	dStruct->h.metalanguagesOffset = ftell(ddFile);
 	// Then write out the metalanguage indexes.
 	for (i=0; i<dStruct->h.nMetalanguages; i++)
@@ -210,6 +219,9 @@ static int index_writeDriverData(uint32_t *fileOffset)
 		};
 	};
 
+	if (verboseMode)
+		{ fwrite("::PBOPS::", strlen("::PBOPS::")+1, 1, strFile); };
+
 	dStruct->h.parentBopsOffset = ftell(ddFile);
 	// Then write out the parent bops.
 	for (i=0; i<dStruct->h.nParentBops; i++)
@@ -221,10 +233,14 @@ static int index_writeDriverData(uint32_t *fileOffset)
 			!= 1)
 		{
 			fclose(ddFile);
+			fclose(strFile);
 			fprintf(stderr, "Error: Failed to write out parent bop.\n");
 			return EX_FILE_IO;
 		};
 	};
+
+	if (verboseMode)
+		{ fwrite("::CBOPS::", strlen("::CBOPS::")+1, 1, strFile); };
 
 	dStruct->h.childBopsOffset = ftell(ddFile);
 	// Then write out the child bops.
@@ -237,10 +253,14 @@ static int index_writeDriverData(uint32_t *fileOffset)
 			!= 1)
 		{
 			fclose(ddFile);
+			fclose(strFile);
 			fprintf(stderr, "Error: Failed to write out child bop.\n");
 			return EX_FILE_IO;
 		};
 	};
+
+	if (verboseMode)
+		{ fwrite("::IBOPS::", strlen("::IBOPS::")+1, 1, strFile); };
 
 	dStruct->h.internalBopsOffset = ftell(ddFile);
 	// Then write out the internal bops.
@@ -253,6 +273,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 			!= 1)
 		{
 			fclose(ddFile);
+			fclose(strFile);
 			fprintf(stderr, "Error: Failed to write out internal bop.\n");
 			return EX_FILE_IO;
 		};
@@ -260,6 +281,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 
 	// Done.
 	fclose(ddFile);
+	fclose(strFile);
 	return EX_SUCCESS;
 }
 
@@ -297,6 +319,9 @@ int index_writeDevices(uint32_t *offset)
 		fprintf(stderr, "Error: Failed to open devices, data or strings index.\n");
 		return EX_FILE_OPEN;
 	};
+
+	if (verboseMode)
+		{ fwrite("::DEVICES::", strlen("::DEVICES::")+1, 1, strFile); };
 
 	*offset = ftell(devFile);
 
@@ -345,6 +370,9 @@ static int index_writeProvisions(uint32_t *provOffset)
 		fprintf(stderr, "Failed to open prov or string index.\n");
 		return EX_FILE_OPEN;
 	};
+
+	if (verboseMode)
+		{ fwrite("::PROVISIONS::", strlen("::PROVISIONS::")+1, 1, stringF); };
 
 	*provOffset = ftell(provF);
 
@@ -402,6 +430,9 @@ static int index_writeRanks(uint32_t *fileOffset)
 		fprintf(stderr, "Error: Failed to open ranks, data or string index.\n");
 		return EX_FILE_OPEN;
 	};
+
+	if (verboseMode)
+		{ fwrite("::RANKS::", strlen("::RANKS::")+1, 1, stringF); };
 
 	*fileOffset = ftell(rankF);
 
@@ -660,6 +691,7 @@ int zudi::driver::_metalanguageS::writeOut(FILE *dataF, FILE *stringF)
 	zudi::driver::metalanguageS	tmp;
 
 	tmp.index = index;
+	fflush(stringF);
 	tmp.nameOff = ftell(stringF);
 
 	if (fwrite(name, strlen(name) + 1, 1, stringF) < 1)
