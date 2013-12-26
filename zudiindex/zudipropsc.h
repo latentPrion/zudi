@@ -41,6 +41,7 @@ enum parser_lineTypeE {
 
 int parser_initializeNewDriverState(uint16_t driverId);
 struct zudi::driver::driverS *parser_getCurrentDriverState(void);
+int parser_getNSupportedDevices(void);
 void parser_releaseState(void);
 
 enum parser_lineTypeE parser_parseLine(const char *line, void **ret);

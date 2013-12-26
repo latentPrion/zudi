@@ -27,6 +27,7 @@ namespace zudi
 		char		endianness[4];
 		uint16_t	majorVersion, minorVersion;
 		uint32_t	nRecords, nextDriverId;
+		uint32_t	nSupportedDevices;
 		uint8_t		reserved[64];
 	};
 

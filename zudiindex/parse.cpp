@@ -49,6 +49,11 @@ struct zudi::driver::driverS *parser_getCurrentDriverState(void)
 	return currentDriver;
 }
 
+int parser_getNSupportedDevices(void)
+{
+	return currentDriver->h.nDevices;
+}
+
 void parser_releaseState(void)
 {
 	if (currentDriver != NULL)

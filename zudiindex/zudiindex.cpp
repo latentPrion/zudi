@@ -472,7 +472,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 	return (feof(propsFile)) ? EX_SUCCESS : EX_PARSE_ERROR;
 }
 
-int incrementNRecords(void)
+int incrementNRecords(uint32_t nSupportedDevices)
 {
 	FILE				*dhFile;
 	struct zudi::headerS		*header;
@@ -498,6 +498,7 @@ int incrementNRecords(void)
 	};
 
 	header->nRecords++;
+	header->nSupportedDevices += nSupportedDevices;
 
 	if (fseek(dhFile, 0, SEEK_SET) != 0)
 		{ fclose(dhFile); return EX_FILE_IO; };
@@ -566,6 +567,7 @@ static int addMode(int argc, char **argv)
 	int		ret;
 	(void)		argc;
 	uint32_t	driverId;
+	int		nSupportedDevices;
 
 	// Try to open up the input file.
 	iFile = fopen(
@@ -621,9 +623,10 @@ static int addMode(int argc, char **argv)
 	};
 
 	index_free();
+	nSupportedDevices = parser_getNSupportedDevices();
 	parser_releaseState();
 	fclose(iFile);
-	return incrementNRecords();
+	return incrementNRecords(nSupportedDevices);
 }
 
 static struct stat		dirStat;
