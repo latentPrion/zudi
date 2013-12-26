@@ -10,4 +10,5 @@ clean: fonyphile
 	rm -f *.o
 
 fonyphile:
+	rm -f fonyphile
 
