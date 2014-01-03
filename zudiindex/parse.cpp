@@ -54,6 +54,11 @@ int parser_getNSupportedDevices(void)
 	return currentDriver->h.nDevices;
 }
 
+int parser_getNSupportedMetas(void)
+{
+	return currentDriver->h.nProvisions;
+}
+
 void parser_releaseState(void)
 {
 	if (currentDriver != NULL)
@@ -1017,6 +1022,7 @@ static void *parseProvides(const char *line)
 			ret->version, ret->name);
 	};
 
+	currentDriver->h.nProvisions++;
 	return ret;
 PARSER_RELEASE_AND_EXIT(&ret);
 }
