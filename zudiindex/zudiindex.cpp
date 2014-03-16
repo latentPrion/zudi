@@ -178,11 +178,11 @@ static void parseCommandLine(int argc, char **argv)
 
 	if (basePathArgIndex != -1) { basePath = argv[basePathArgIndex + 1]; };
 	// basepath is required in ADD and accepted in REMOVE.
-	if (basePath != NULL && strlen(basePath) >= ZUDI_DRIVER_BASEPATH_MAXLEN)
+	if (basePath != NULL && strlen(basePath) >= ZUI_DRIVER_BASEPATH_MAXLEN)
 	{
 		printf("This program accepts basepaths with up to %d "
 			"characters.\n",
-			ZUDI_DRIVER_BASEPATH_MAXLEN);
+			ZUI_DRIVER_BASEPATH_MAXLEN);
 
 		exit(
 			printAndReturn(
@@ -222,7 +222,7 @@ static int createMode(int argc, char **argv)
 	FILE				*currFile;
 	char				*fullName=NULL;
 	int				i, blocksWritten;
-	struct zudi::headerS		*indexHeader;
+	struct zui::headerS		*indexHeader;
 	(void)argc; (void)argv;
 
 	/**	EXPLANATION:
@@ -238,7 +238,7 @@ static int createMode(int argc, char **argv)
 	};
 
 	// Allocate and fill in the index header.
-	indexHeader = (zudi::headerS *)malloc(sizeof(*indexHeader));
+	indexHeader = (zui::headerS *)malloc(sizeof(*indexHeader));
 	if (indexHeader == NULL) { return EX_NOMEM; };
 	memset(indexHeader, 0, sizeof(*indexHeader));
 
@@ -475,7 +475,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 {
 	FILE				*dhFile;
-	struct zudi::headerS		*header;
+	struct zui::headerS		*header;
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
@@ -483,7 +483,7 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 	if (fullName == NULL) { return EX_NOMEM; };
 
-	header = new zudi::headerS;
+	header = new zui::headerS;
 	if (header == NULL) { return EX_NOMEM; };
 
 	dhFile = fopen(fullName, "r+");
@@ -518,7 +518,7 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 static int getNextDriverId(uint32_t *driverId)
 {
-	struct zudi::headerS		*driverHeader;
+	struct zui::headerS		*driverHeader;
 	FILE				*driverHeaderIndex;
 	char				*fullName=NULL;
 
@@ -527,7 +527,7 @@ static int getNextDriverId(uint32_t *driverId)
 
 	if (fullName == NULL) { return 0; };
 
-	driverHeader = new zudi::headerS;
+	driverHeader = new zui::headerS;
 	if (driverHeader == NULL) { return 0; };
 
 	driverHeaderIndex = fopen(fullName, "r+");
@@ -557,7 +557,7 @@ static int getNextDriverId(uint32_t *driverId)
 		fprintf(stderr, "Error: Failed to rewrite index header.\n");
 		return 0;
 	};
-		
+
 	fclose(driverHeaderIndex);
 	return 1;
 }
@@ -661,11 +661,11 @@ int main(int argc, char **argv)
 			"\tdriver header record %zi.\n"
 			"\tregion record %zi.\n"
 			"\tmessage record %zi.\n",
-			sizeof(struct zudi::headerS),
-			sizeof(struct zudi::device::headerS),
-			sizeof(struct zudi::driver::headerS),
-			sizeof(struct zudi::driver::regionS),
-			sizeof(struct zudi::driver::messageS));
+			sizeof(struct zui::headerS),
+			sizeof(struct zui::device::headerS),
+			sizeof(struct zui::driver::headerS),
+			sizeof(struct zui::driver::regionS),
+			sizeof(struct zui::driver::messageS));
 
 		exit(EXIT_SUCCESS);
 	};

@@ -9,7 +9,7 @@
  * one driver at a time), so we can just keep a single global pointer and
  * allocate memory for it on each new call to parser_initializeNewDriver().
  **/
-struct zudi::driver::driverS	*currentDriver=NULL;
+struct zui::driver::driverS	*currentDriver=NULL;
 const char			*limitExceededMessage=
 	"Limit exceeded for entity";
 
@@ -29,22 +29,22 @@ int parser_initializeNewDriverState(uint16_t driverId)
 		currentDriver = NULL;
 	};
 
-	currentDriver = new zudi::driver::driverS;
+	currentDriver = new zui::driver::driverS;
 	if (currentDriver == NULL) { return 0; };
 
 	memset(currentDriver, 0, sizeof(*currentDriver));
 	currentDriver->h.id = driverId;
 	strcpy(currentDriver->h.basePath, basePath);
 	if (propsType == META_PROPS) {
-		currentDriver->h.type = zudi::driver::DRIVERTYPE_METALANGUAGE;
+		currentDriver->h.type = zui::driver::DRIVERTYPE_METALANGUAGE;
 	} else {
-		currentDriver->h.type = zudi::driver::DRIVERTYPE_DRIVER;
+		currentDriver->h.type = zui::driver::DRIVERTYPE_DRIVER;
 	};
 
 	return 1;
 }
 
-struct zudi::driver::driverS *parser_getCurrentDriverState(void)
+struct zui::driver::driverS *parser_getCurrentDriverState(void)
 {
 	return currentDriver;
 }
@@ -125,10 +125,10 @@ static inline int hasSlashes(const char *str)
 
 static void *parseMessage(const char *line)
 {
-	struct zudi::driver::_messageS	*ret;
+	struct zui::driver::_messageS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::_messageS);
+	PARSER_MALLOC(&ret, struct zui::driver::_messageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -137,7 +137,7 @@ static void *parseMessage(const char *line)
 
 	line = skipWhitespaceIn(tmp);
 
-	if (strlen(line) >= ZUDI_MESSAGE_MAXLEN) { goto releaseAndExit; };
+	if (strlen(line) >= ZUI_MESSAGE_MAXLEN) { goto releaseAndExit; };
 	strcpy(ret->message, line);
 	ret->driverId = currentDriver->h.id;
 
@@ -155,10 +155,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseDisasterMessage(const char *line)
 {
-	struct zudi::driver::_disasterMessageS	*ret;
+	struct zui::driver::_disasterMessageS	*ret;
 	char					*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::_disasterMessageS);
+	PARSER_MALLOC(&ret, struct zui::driver::_disasterMessageS);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -167,7 +167,7 @@ static void *parseDisasterMessage(const char *line)
 
 	line = skipWhitespaceIn(tmp);
 
-	if (strlen(line) >= ZUDI_MESSAGE_MAXLEN) { goto releaseAndExit; };
+	if (strlen(line) >= ZUI_MESSAGE_MAXLEN) { goto releaseAndExit; };
 	strcpy(ret->message, line);
 	ret->driverId = currentDriver->h.id;
 
@@ -185,12 +185,12 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseMessageFile(const char *line)
 {
-	struct zudi::driver::_messageFileS	*ret;
+	struct zui::driver::_messageFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::_messageFileS);
+	PARSER_MALLOC(&ret, struct zui::driver::_messageFileS);
 	line = skipWhitespaceIn(line);
 
-	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
+	if (strlen(line) >= ZUI_FILENAME_MAXLEN) { goto releaseAndExit; };
 
 	if (hasSlashes(line)) { goto releaseAndExit; };
 	strcpy(ret->fileName, line);
@@ -208,12 +208,12 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseReadableFile(const char *line)
 {
-	struct zudi::driver::_readableFileS	*ret;
+	struct zui::driver::_readableFileS	*ret;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::_readableFileS);
+	PARSER_MALLOC(&ret, struct zui::driver::_readableFileS);
 	line = skipWhitespaceIn(line);
 
-	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { goto releaseAndExit; };
+	if (strlen(line) >= ZUI_FILENAME_MAXLEN) { goto releaseAndExit; };
 
 	if (hasSlashes(line)) { goto releaseAndExit; };
 	strcpy(ret->fileName, line);
@@ -236,7 +236,7 @@ static int parseShortName(const char *line)
 	line = skipWhitespaceIn(line);
 	white = findWhitespaceAfter(line);
 
-	if (strlenUpToWhitespace(line, white) >= ZUDI_DRIVER_SHORTNAME_MAXLEN)
+	if (strlenUpToWhitespace(line, white) >= ZUI_DRIVER_SHORTNAME_MAXLEN)
 		{ return 0; };
 
 	// No whitespace is allowed in the shortname.
@@ -247,7 +247,7 @@ static int parseShortName(const char *line)
 		sprintf(verboseBuff, "SHORT_NAME: \"%s\"",
 			currentDriver->h.shortName);
 	};
-	
+
 	return 1;
 }
 
@@ -320,7 +320,7 @@ static int parseRelease(const char *line)
 	line = skipWhitespaceIn(tmp);
 	tmp = findWhitespaceAfter(line);
 
-	if (strlenUpToWhitespace(line, tmp) >= ZUDI_DRIVER_RELEASE_MAXLEN)
+	if (strlenUpToWhitespace(line, tmp) >= ZUI_DRIVER_RELEASE_MAXLEN)
 		{ return 0; };
 
 	strcpyUpToWhitespace(currentDriver->h.releaseString, line, tmp);
@@ -339,14 +339,14 @@ static int parseRequires(const char *line)
 {
 	char		*tmp;
 	line = skipWhitespaceIn(line);
-	if (currentDriver->h.nRequirements >= ZUDI_DRIVER_MAX_NREQUIREMENTS)
+	if (currentDriver->h.nRequirements >= ZUI_DRIVER_MAX_NREQUIREMENTS)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	tmp = findWhitespaceAfter(line);
 	// If no whitespace, line is invalid.
 	if (tmp == NULL) { return 0; };
 	// Check to make sure the meta name doesn't exceed our limit.
-	if (strlenUpToWhitespace(line, tmp) >= ZUDI_DRIVER_REQUIREMENT_MAXLEN)
+	if (strlenUpToWhitespace(line, tmp) >= ZUI_DRIVER_REQUIREMENT_MAXLEN)
 		{ return 0; };
 
 	strcpyUpToWhitespace(
@@ -388,7 +388,7 @@ static int parseMeta(const char *line)
 {
 	char		*tmp;
 
-	if (currentDriver->h.nMetalanguages >= ZUDI_DRIVER_MAX_NMETALANGUAGES)
+	if (currentDriver->h.nMetalanguages >= ZUI_DRIVER_MAX_NMETALANGUAGES)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
@@ -405,7 +405,7 @@ static int parseMeta(const char *line)
 	line = skipWhitespaceIn(tmp);
 	tmp = findWhitespaceAfter(line);
 
-	if (strlenUpToWhitespace(line, tmp) >= ZUDI_DRIVER_METALANGUAGE_MAXLEN)
+	if (strlenUpToWhitespace(line, tmp) >= ZUI_DRIVER_METALANGUAGE_MAXLEN)
 		{ return 0; };
 
 	strcpyUpToWhitespace(
@@ -431,7 +431,7 @@ static int parseChildBops(const char *line)
 {
 	char		*end;
 
-	if (currentDriver->h.nChildBops >= ZUDI_DRIVER_MAX_NCHILD_BOPS)
+	if (currentDriver->h.nChildBops >= ZUI_DRIVER_MAX_NCHILD_BOPS)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
@@ -477,7 +477,7 @@ static int parseParentBops(const char *line)
 {
 	char		*end;
 
-	if (currentDriver->h.nChildBops >= ZUDI_DRIVER_MAX_NPARENT_BOPS)
+	if (currentDriver->h.nChildBops >= ZUI_DRIVER_MAX_NPARENT_BOPS)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
@@ -530,7 +530,7 @@ static int parseInternalBops(const char *line)
 {
 	char		*end;
 
-	if (currentDriver->h.nChildBops >= ZUDI_DRIVER_MAX_NPARENT_BOPS)
+	if (currentDriver->h.nChildBops >= ZUI_DRIVER_MAX_NPARENT_BOPS)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
@@ -603,12 +603,12 @@ static int parseInternalBops(const char *line)
 
 static int parseModule(const char *line)
 {
-	if (currentDriver->h.nModules >= ZUDI_DRIVER_MAX_NMODULES)
+	if (currentDriver->h.nModules >= ZUI_DRIVER_MAX_NMODULES)
 		{ printf("%s.\n", limitExceededMessage); return 0; };
 
 	line = skipWhitespaceIn(line);
 
-	if (strlen(line) >= ZUDI_FILENAME_MAXLEN) { return 0; };
+	if (strlen(line) >= ZUI_FILENAME_MAXLEN) { return 0; };
 	strcpy(currentDriver->modules[currentDriver->h.nModules].fileName, line);
 
 	// We assign a custom module index to each module for convenience.
@@ -629,7 +629,7 @@ static int parseModule(const char *line)
 }
 
 static const char *parseRegionAttribute(
-	struct zudi::driver::regionS *r, const char *line, int *status
+	struct zui::driver::regionS *r, const char *line, int *status
 	)
 {
 	char			*white;
@@ -640,7 +640,7 @@ static const char *parseRegionAttribute(
 		if (white == NULL) { goto fail; }; \
 		line = skipWhitespaceIn(white); \
 	} while (0)
-	
+
 
 	if (!strncmp(line, "type", strlen("type")))
 	{
@@ -649,10 +649,10 @@ static const char *parseRegionAttribute(
 		if (!strncmp(line, "normal", strlen("normal")))
 			{ goto success; };
 		if (!strncmp(line, "fp", strlen("fp"))) {
-			r->flags |= ZUDI_REGION_FLAGS_FP; goto success;
+			r->flags |= ZUI_REGION_FLAGS_FP; goto success;
 		};
 		if (!strncmp(line, "interrupt", strlen("interrupt"))) {
-			r->flags |= ZUDI_REGION_FLAGS_INTERRUPT; goto success;
+			r->flags |= ZUI_REGION_FLAGS_INTERRUPT; goto success;
 		};
 
 		printf("Error: Invalid value for region attribute \"type\".\n");
@@ -666,7 +666,7 @@ static const char *parseRegionAttribute(
 		if (!strncmp(line, "static", strlen("static")))
 			{ goto success; };
 		if (!strncmp(line, "dynamic", strlen("dynamic"))) {
-			r->flags |= ZUDI_REGION_FLAGS_DYNAMIC; goto success;
+			r->flags |= ZUI_REGION_FLAGS_DYNAMIC; goto success;
 		};
 
 		printf("Error: Invalid value for region attribute "
@@ -680,13 +680,13 @@ static const char *parseRegionAttribute(
 		REGION_ATTRUTE_PARSER_PROLOGUE;
 
 		if (!strncmp(line, "lo", strlen("lo"))) {
-			r->priority = zudi::driver::REGION_PRIO_LOW; goto success;
+			r->priority = zui::driver::REGION_PRIO_LOW; goto success;
 		};
 		if (!strncmp(line, "med", strlen("med"))) {
-			r->priority = zudi::driver::REGION_PRIO_MEDIUM; goto success;
+			r->priority = zui::driver::REGION_PRIO_MEDIUM; goto success;
 		};
 		if (!strncmp(line, "hi", strlen("hi"))) {
-			r->priority = zudi::driver::REGION_PRIO_HIGH; goto success;
+			r->priority = zui::driver::REGION_PRIO_HIGH; goto success;
 		};
 
 		printf("Error: Invalid value for region attribute "
@@ -711,7 +711,7 @@ static const char *parseRegionAttribute(
 
 	printf("Error: Unknown region attribute.\n");
 	goto fail;
-		
+
 success:
 	white = findWhitespaceAfter(line);
 	*status = 1;
@@ -724,11 +724,11 @@ fail:
 
 static void *parseRegion(const char *line)
 {
-	struct zudi::driver::regionS	*ret;
+	struct zui::driver::regionS	*ret;
 	char				*tmp;
 	int				status;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::regionS);
+	PARSER_MALLOC(&ret, struct zui::driver::regionS);
 	line = skipWhitespaceIn(line);
 
 	ret->driverId = currentDriver->h.id;
@@ -739,7 +739,7 @@ static void *parseRegion(const char *line)
 
 		goto releaseAndExit;
 	};
-		
+
 	ret->moduleIndex = currentDriver->h.nModules - 1;
 	ret->index = strtoul(line, &tmp, 10);
 	if (line == tmp) { goto releaseAndExit; };
@@ -766,9 +766,9 @@ static void *parseRegion(const char *line)
 			ret->moduleIndex,
 			currentDriver->modules[ret->moduleIndex].fileName,
 			(int)ret->priority, (int)ret->latency,
-			(ret->flags & ZUDI_REGION_FLAGS_DYNAMIC) ? 'y' : 'n',
-			(ret->flags & ZUDI_REGION_FLAGS_FP) ? 'y' : 'n',
-			(ret->flags & ZUDI_REGION_FLAGS_INTERRUPT) ? 'y' : 'n');
+			(ret->flags & ZUI_REGION_FLAGS_DYNAMIC) ? 'y' : 'n',
+			(ret->flags & ZUI_REGION_FLAGS_FP) ? 'y' : 'n',
+			(ret->flags & ZUI_REGION_FLAGS_INTERRUPT) ? 'y' : 'n');
 	};
 
 	currentDriver->h.nRegions++;
@@ -792,7 +792,7 @@ static uint8_t getDigit(const char c)
 }
 
 static const char *parseDeviceAttribute(
-	struct zudi::device::_deviceS *d, const char *line, int *status
+	struct zui::device::_deviceS *d, const char *line, int *status
 	)
 {
 	char		*white;
@@ -905,11 +905,11 @@ success:
 
 static void *parseDevice(const char *line)
 {
-	struct zudi::device::_deviceS	*ret;
+	struct zui::device::_deviceS	*ret;
 	char				*tmp;
 	int				status, i, j, printLen;
 
-	PARSER_MALLOC(&ret, struct zudi::device::_deviceS);
+	PARSER_MALLOC(&ret, struct zui::device::_deviceS);
 	ret->h.index = currentDriver->h.nDevices;
 	line = skipWhitespaceIn(line);
 	ret->h.messageIndex = strtoul(line, &tmp, 10);
@@ -996,15 +996,15 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseProvides(const char *line)
 {
-	struct zudi::driver::_provisionS	*ret;
+	struct zui::driver::_provisionS	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zudi::driver::_provisionS);
+	PARSER_MALLOC(&ret, struct zui::driver::_provisionS);
 
 	line = skipWhitespaceIn(line);
 	tmp = findWhitespaceAfter(line);
 	if (tmp == NULL) { goto releaseAndExit; };
-	if (strlenUpToWhitespace(line, tmp) >= ZUDI_PROVISION_NAME_MAXLEN)
+	if (strlenUpToWhitespace(line, tmp) >= ZUI_PROVISION_NAME_MAXLEN)
 		{ goto releaseAndExit; };
 
 	strcpyUpToWhitespace(ret->name, line, tmp);
@@ -1027,7 +1027,7 @@ static void *parseProvides(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
-static int parseRankAttribute(struct zudi::rank::_rankS *rank, const char *line)
+static int parseRankAttribute(struct zui::rank::_rankS *rank, const char *line)
 {
 	char		*white;
 
@@ -1041,11 +1041,11 @@ static int parseRankAttribute(struct zudi::rank::_rankS *rank, const char *line)
 
 static void *parseRank(const char *line)
 {
-	struct zudi::rank::_rankS		*ret;
+	struct zui::rank::_rankS		*ret;
 	char				*tmp;
 	int				status, i, printLen=0;
 
-	PARSER_MALLOC(&ret, struct zudi::rank::_rankS);
+	PARSER_MALLOC(&ret, struct zui::rank::_rankS);
 	ret->h.driverId = currentDriver->h.id;
 
 	line = skipWhitespaceIn(line);
@@ -1061,7 +1061,7 @@ static void *parseRank(const char *line)
 
 	do
 	{
-		if (ret->h.nAttributes >= ZUDI_RANK_MAX_NATTRS)
+		if (ret->h.nAttributes >= ZUI_RANK_MAX_NATTRS)
 		{
 			fprintf(stderr, limitExceededMessage);
 			goto releaseAndExit;
@@ -1197,7 +1197,7 @@ enum parser_lineTypeE parser_parseLine(const char *line, void **ret)
 	{
 		if (!strncmp(line, "multi_parent", slen = strlen("multi_parent")))
 			{ return LT_MISC; };
-	
+
 		if (!strncmp(line, "enumerates", slen = strlen("enumerates")))
 			{ return LT_MISC; };
 

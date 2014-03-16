@@ -5,9 +5,9 @@ CPPFLAGS=-I../include
 all: zudiindex zudiindex-addall
 
 zudiindex: parse.o index.o
-zudiindex.o: zudipropsc.h zudiIndex.h
-parse.o: zudipropsc.h zudiIndex.h
-index.o: zudipropsc.h zudiIndex.h
+zudiindex.o: zudipropsc.h zui.h
+parse.o: zudipropsc.h zui.h
+index.o: zudipropsc.h zui.h
 
 install: all
 	install zudiindex zudiindex-addall /usr/bin

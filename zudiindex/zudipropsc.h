@@ -3,10 +3,10 @@
 
 	#include <stdio.h>
 	#include <stdlib.h>
-	#include "zudiIndex.h"
+	#include "zui.h"
 
 enum parseModeE { PARSE_NONE, PARSE_TEXT, PARSE_BINARY };
-enum programModeE { 
+enum programModeE {
 	MODE_NONE, MODE_ADD, MODE_LIST, MODE_REMOVE, MODE_PRINT_SIZES,
 	MODE_CREATE };
 
@@ -40,7 +40,7 @@ enum parser_lineTypeE {
 	LT_METALANGUAGE, LT_READABLE_FILE, LT_RANK, LT_PROVIDES };
 
 int parser_initializeNewDriverState(uint16_t driverId);
-struct zudi::driver::driverS *parser_getCurrentDriverState(void);
+struct zui::driver::driverS *parser_getCurrentDriverState(void);
 int parser_getNSupportedDevices(void);
 int parser_getNSupportedMetas(void);
 void parser_releaseState(void);
