@@ -40,7 +40,7 @@ enum parser_lineTypeE {
 	LT_METALANGUAGE, LT_READABLE_FILE, LT_RANK, LT_PROVIDES };
 
 int parser_initializeNewDriverState(uint16_t driverId);
-struct zui::driver::driverS *parser_getCurrentDriverState(void);
+struct zui::driver::sDriver *parser_getCurrentDriverState(void);
 int parser_getNSupportedDevices(void);
 int parser_getNSupportedMetas(void);
 void parser_releaseState(void);

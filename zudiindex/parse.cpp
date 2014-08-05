@@ -9,7 +9,7 @@
  * one driver at a time), so we can just keep a single global pointer and
  * allocate memory for it on each new call to parser_initializeNewDriver().
  **/
-struct zui::driver::driverS	*currentDriver=NULL;
+struct zui::driver::sDriver	*currentDriver=NULL;
 const char			*limitExceededMessage=
 	"Limit exceeded for entity";
 
@@ -29,7 +29,7 @@ int parser_initializeNewDriverState(uint16_t driverId)
 		currentDriver = NULL;
 	};
 
-	currentDriver = new zui::driver::driverS;
+	currentDriver = new zui::driver::sDriver;
 	if (currentDriver == NULL) { return 0; };
 
 	memset(currentDriver, 0, sizeof(*currentDriver));
@@ -44,7 +44,7 @@ int parser_initializeNewDriverState(uint16_t driverId)
 	return 1;
 }
 
-struct zui::driver::driverS *parser_getCurrentDriverState(void)
+struct zui::driver::sDriver *parser_getCurrentDriverState(void)
 {
 	return currentDriver;
 }
@@ -125,10 +125,10 @@ static inline int hasSlashes(const char *str)
 
 static void *parseMessage(const char *line)
 {
-	struct zui::driver::_messageS	*ret;
+	struct zui::driver::_sMessage	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zui::driver::_messageS);
+	PARSER_MALLOC(&ret, struct zui::driver::_sMessage);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -155,10 +155,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseDisasterMessage(const char *line)
 {
-	struct zui::driver::_disasterMessageS	*ret;
+	struct zui::driver::_sDisasterMessage	*ret;
 	char					*tmp;
 
-	PARSER_MALLOC(&ret, struct zui::driver::_disasterMessageS);
+	PARSER_MALLOC(&ret, struct zui::driver::_sDisasterMessage);
 	line = skipWhitespaceIn(line);
 
 	ret->index = strtoul(line, &tmp, 10);
@@ -185,9 +185,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseMessageFile(const char *line)
 {
-	struct zui::driver::_messageFileS	*ret;
+	struct zui::driver::_sMessageFile	*ret;
 
-	PARSER_MALLOC(&ret, struct zui::driver::_messageFileS);
+	PARSER_MALLOC(&ret, struct zui::driver::_sMessageFile);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -208,9 +208,9 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseReadableFile(const char *line)
 {
-	struct zui::driver::_readableFileS	*ret;
+	struct zui::driver::_sReadableFile	*ret;
 
-	PARSER_MALLOC(&ret, struct zui::driver::_readableFileS);
+	PARSER_MALLOC(&ret, struct zui::driver::_sReadableFile);
 	line = skipWhitespaceIn(line);
 
 	if (strlen(line) >= ZUI_FILENAME_MAXLEN) { goto releaseAndExit; };
@@ -629,7 +629,7 @@ static int parseModule(const char *line)
 }
 
 static const char *parseRegionAttribute(
-	struct zui::driver::regionS *r, const char *line, int *status
+	struct zui::driver::sRegion *r, const char *line, int *status
 	)
 {
 	char			*white;
@@ -724,11 +724,11 @@ fail:
 
 static void *parseRegion(const char *line)
 {
-	struct zui::driver::regionS	*ret;
+	struct zui::driver::sRegion	*ret;
 	char				*tmp;
 	int				status;
 
-	PARSER_MALLOC(&ret, struct zui::driver::regionS);
+	PARSER_MALLOC(&ret, struct zui::driver::sRegion);
 	line = skipWhitespaceIn(line);
 
 	ret->driverId = currentDriver->h.id;
@@ -792,7 +792,7 @@ static uint8_t getDigit(const char c)
 }
 
 static const char *parseDeviceAttribute(
-	struct zui::device::_deviceS *d, const char *line, int *status
+	struct zui::device::_sDevice *d, const char *line, int *status
 	)
 {
 	char		*white;
@@ -905,11 +905,11 @@ success:
 
 static void *parseDevice(const char *line)
 {
-	struct zui::device::_deviceS	*ret;
+	struct zui::device::_sDevice	*ret;
 	char				*tmp;
 	int				status, i, j, printLen;
 
-	PARSER_MALLOC(&ret, struct zui::device::_deviceS);
+	PARSER_MALLOC(&ret, struct zui::device::_sDevice);
 	ret->h.index = currentDriver->h.nDevices;
 	line = skipWhitespaceIn(line);
 	ret->h.messageIndex = strtoul(line, &tmp, 10);
@@ -996,10 +996,10 @@ PARSER_RELEASE_AND_EXIT(&ret);
 
 static void *parseProvides(const char *line)
 {
-	struct zui::driver::_provisionS	*ret;
+	struct zui::driver::_sProvision	*ret;
 	char				*tmp;
 
-	PARSER_MALLOC(&ret, struct zui::driver::_provisionS);
+	PARSER_MALLOC(&ret, struct zui::driver::_sProvision);
 
 	line = skipWhitespaceIn(line);
 	tmp = findWhitespaceAfter(line);
@@ -1027,7 +1027,7 @@ static void *parseProvides(const char *line)
 PARSER_RELEASE_AND_EXIT(&ret);
 }
 
-static int parseRankAttribute(struct zui::rank::_rankS *rank, const char *line)
+static int parseRankAttribute(struct zui::rank::_sRank *rank, const char *line)
 {
 	char		*white;
 
@@ -1041,11 +1041,11 @@ static int parseRankAttribute(struct zui::rank::_rankS *rank, const char *line)
 
 static void *parseRank(const char *line)
 {
-	struct zui::rank::_rankS		*ret;
+	struct zui::rank::_sRank		*ret;
 	char				*tmp;
 	int				status, i, printLen=0;
 
-	PARSER_MALLOC(&ret, struct zui::rank::_rankS);
+	PARSER_MALLOC(&ret, struct zui::rank::_sRank);
 	ret->h.driverId = currentDriver->h.id;
 
 	line = skipWhitespaceIn(line);

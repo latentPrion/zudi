@@ -110,7 +110,7 @@ static int index_writeDriverHeader(void)
 {
 	FILE				*dhFile;
 	char				*fullName=NULL;
-	struct zui::driver::driverS	*dStruct;
+	struct zui::driver::sDriver	*dStruct;
 
 	fullName = makeFullName(
 		fullName, indexPath, "drivers.zudi-index");
@@ -141,7 +141,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 {
 	FILE				*ddFile, *strFile;
 	int				i;
-	struct zui::driver::driverS	*dStruct;
+	struct zui::driver::sDriver	*dStruct;
 	char				*driverDataFFullName=NULL,
 					*stringFFullName=NULL;
 
@@ -288,7 +288,7 @@ static int index_writeDriverData(uint32_t *fileOffset)
 int index_writeDevices(uint32_t *offset)
 {
 	struct listElementS		*tmp;
-	struct zui::device::_deviceS	*dev;
+	struct zui::device::_sDevice	*dev;
 	FILE				*dataFile, *devFile, *strFile;
 	char				*deviceFFullName=NULL,
 					*stringFFullName=NULL,
@@ -327,7 +327,7 @@ int index_writeDevices(uint32_t *offset)
 
 	for (tmp = deviceList; tmp != NULL; tmp = tmp->next)
 	{
-		dev = (zui::device::_deviceS *)tmp->item;
+		dev = (zui::device::_sDevice *)tmp->item;
 
 		// Write the device header out.
 		if (dev->writeOut(devFile, dataFile, strFile) != EX_SUCCESS)
@@ -378,9 +378,9 @@ static int index_writeProvisions(uint32_t *provOffset)
 
 	for (tmp = provisionList; tmp != NULL; tmp = tmp->next)
 	{
-		zui::driver::_provisionS	*item;
+		zui::driver::_sProvision	*item;
 
-		item = (zui::driver::_provisionS *)tmp->item;
+		item = (zui::driver::_sProvision *)tmp->item;
 		err = item->writeOut(provF, stringF);
 		if (err != EX_SUCCESS)
 		{
@@ -397,7 +397,7 @@ static int index_writeProvisions(uint32_t *provOffset)
 static int index_writeRanks(uint32_t *fileOffset)
 {
 	struct listElementS		*tmp;
-	struct zui::rank::_rankS	*item;
+	struct zui::rank::_sRank	*item;
 	FILE				*rankF, *dataF, *stringF;
 	char				*rankFFullName=NULL,
 					*dataFFullName=NULL,
@@ -438,7 +438,7 @@ static int index_writeRanks(uint32_t *fileOffset)
 
 	for (tmp = rankList; tmp != NULL; tmp = tmp->next)
 	{
-		item = (zui::rank::_rankS *)tmp->item;
+		item = (zui::rank::_sRank *)tmp->item;
 
 		if (item->writeOut(rankF, dataF, stringF))
 		{
@@ -539,35 +539,35 @@ int index_writeToDisk(void)
 		provisionFileOffset;
 
 	if ((ret = index_writeListToDisk(
-		regionList, (struct zui::driver::regionS *)dummy,
+		regionList, (struct zui::driver::sRegion *)dummy,
 		"regions", &offsetTmp)) != EX_SUCCESS)
 		{ return ret; };
 
 	parser_getCurrentDriverState()->h.regionsOffset = offsetTmp;
 
 	if ((ret = index_writeListToDisk(
-		messageList, (struct zui::driver::_messageS *)dummy,
+		messageList, (struct zui::driver::_sMessage *)dummy,
 		"message", &offsetTmp)) != EX_SUCCESS)
 		{ return ret; };
 
 	parser_getCurrentDriverState()->h.messagesOffset = offsetTmp;
 
 	if ((ret = index_writeListToDisk(
-		disasterMessageList, (struct zui::driver::_disasterMessageS *)dummy,
+		disasterMessageList, (struct zui::driver::_sDisasterMessage *)dummy,
 		"disaster-message", &offsetTmp)) != EX_SUCCESS)
 		{ return ret; };
 
 	parser_getCurrentDriverState()->h.disasterMessagesOffset = offsetTmp;
 
 	if ((ret = index_writeListToDisk(
-		messageFileList, (struct zui::driver::_messageFileS *)dummy,
+		messageFileList, (struct zui::driver::_sMessageFile *)dummy,
 		"message-file", &offsetTmp)) != EX_SUCCESS)
 		{ return ret; };
 
 	parser_getCurrentDriverState()->h.messageFilesOffset = offsetTmp;
 
 	if ((ret = index_writeListToDisk(
-		readableFileList, (struct zui::driver::_readableFileS *)dummy,
+		readableFileList, (struct zui::driver::_sReadableFile *)dummy,
 		"readable-file", &offsetTmp)) != EX_SUCCESS)
 		{ return ret; };
 
@@ -578,7 +578,7 @@ int index_writeToDisk(void)
 	return EX_SUCCESS;
 }
 
-int zui::device::_deviceS::writeOut(FILE *headerF, FILE *dataF, FILE *stringF)
+int zui::device::_sDevice::writeOut(FILE *headerF, FILE *dataF, FILE *stringF)
 {
 	int		ret;
 
@@ -599,9 +599,9 @@ int zui::device::_deviceS::writeOut(FILE *headerF, FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
+int zui::device::_sAttrData::writeOut(FILE *outfile, FILE *stringfile)
 {
-	zui::device::attrDataS		tmp;
+	zui::device::sAttrData		tmp;
 
 	tmp.attr_type = attr_type;
 	tmp.attr_length = attr_length;
@@ -664,9 +664,9 @@ int zui::device::_attrDataS::writeOut(FILE *outfile, FILE *stringfile)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_requirementS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sRequirement::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::requirementS	tmp;
+	zui::driver::sRequirement	tmp;
 
 	tmp.version = version;
 	tmp.nameOff = ftell(stringF);
@@ -686,9 +686,9 @@ int zui::driver::_requirementS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_metalanguageS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sMetalanguage::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::metalanguageS	tmp;
+	zui::driver::sMetalanguage	tmp;
 
 	tmp.index = index;
 	fflush(stringF);
@@ -709,9 +709,9 @@ int zui::driver::_metalanguageS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_moduleS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sModule::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::moduleS	tmp;
+	zui::driver::sModule	tmp;
 
 	tmp.index = index;
 	tmp.fileNameOff = ftell(stringF);
@@ -731,9 +731,9 @@ int zui::driver::_moduleS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_messageS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sMessage::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::messageS	tmp;
+	zui::driver::sMessage	tmp;
 
 	tmp.driverId = driverId;
 	tmp.index = index;
@@ -754,9 +754,9 @@ int zui::driver::_messageS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_messageFileS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sMessageFile::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::messageFileS	tmp;
+	zui::driver::sMessageFile	tmp;
 
 	tmp.driverId = driverId;
 	tmp.index = index;
@@ -777,9 +777,9 @@ int zui::driver::_messageFileS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_disasterMessageS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sDisasterMessage::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::disasterMessageS	tmp;
+	zui::driver::sDisasterMessage	tmp;
 
 	tmp.driverId = driverId;
 	tmp.index = index;
@@ -800,9 +800,9 @@ int zui::driver::_disasterMessageS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_readableFileS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::_sReadableFile::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::driver::readableFileS	tmp;
+	zui::driver::sReadableFile	tmp;
 
 	tmp.driverId = driverId;
 	tmp.index = index;
@@ -823,9 +823,9 @@ int zui::driver::_readableFileS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::_provisionS::writeOut(FILE *provF, FILE *stringF)
+int zui::driver::_sProvision::writeOut(FILE *provF, FILE *stringF)
 {
-	zui::driver::provisionS	tmp;
+	zui::driver::sProvision	tmp;
 
 	tmp.driverId = driverId;
 	tmp.version = version;
@@ -846,7 +846,7 @@ int zui::driver::_provisionS::writeOut(FILE *provF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::driver::regionS::writeOut(FILE *dataF, FILE *stringF)
+int zui::driver::sRegion::writeOut(FILE *dataF, FILE *stringF)
 {
 	if (fwrite(this, sizeof(*this), 1, dataF) < 1)
 	{
@@ -857,7 +857,7 @@ int zui::driver::regionS::writeOut(FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::rank::_rankS::writeOut(FILE *rankF, FILE *dataF, FILE *stringF)
+int zui::rank::_sRank::writeOut(FILE *rankF, FILE *dataF, FILE *stringF)
 {
 	int		err;
 
@@ -878,9 +878,9 @@ int zui::rank::_rankS::writeOut(FILE *rankF, FILE *dataF, FILE *stringF)
 	return EX_SUCCESS;
 }
 
-int zui::rank::_rankAttrS::writeOut(FILE *dataF, FILE *stringF)
+int zui::rank::_sRankAttr::writeOut(FILE *dataF, FILE *stringF)
 {
-	zui::rank::rankAttrS	tmp;
+	zui::rank::sRankAttr	tmp;
 
 	tmp.nameOff = ftell(stringF);
 

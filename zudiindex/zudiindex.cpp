@@ -222,7 +222,7 @@ static int createMode(int argc, char **argv)
 	FILE				*currFile;
 	char				*fullName=NULL;
 	int				i, blocksWritten;
-	struct zui::headerS		*indexHeader;
+	struct zui::sHeader		*indexHeader;
 	(void)argc; (void)argv;
 
 	/**	EXPLANATION:
@@ -238,7 +238,7 @@ static int createMode(int argc, char **argv)
 	};
 
 	// Allocate and fill in the index header.
-	indexHeader = (zui::headerS *)malloc(sizeof(*indexHeader));
+	indexHeader = (zui::sHeader *)malloc(sizeof(*indexHeader));
 	if (indexHeader == NULL) { return EX_NOMEM; };
 	memset(indexHeader, 0, sizeof(*indexHeader));
 
@@ -475,7 +475,7 @@ static int textParse(FILE *propsFile, char *propsLineBuff)
 int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 {
 	FILE				*dhFile;
-	struct zui::headerS		*header;
+	struct zui::sHeader		*header;
 	char				*fullName=NULL;
 
 	fullName = makeFullName(
@@ -483,7 +483,7 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 	if (fullName == NULL) { return EX_NOMEM; };
 
-	header = new zui::headerS;
+	header = new zui::sHeader;
 	if (header == NULL) { return EX_NOMEM; };
 
 	dhFile = fopen(fullName, "r+");
@@ -518,7 +518,7 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 static int getNextDriverId(uint32_t *driverId)
 {
-	struct zui::headerS		*driverHeader;
+	struct zui::sHeader		*driverHeader;
 	FILE				*driverHeaderIndex;
 	char				*fullName=NULL;
 
@@ -527,7 +527,7 @@ static int getNextDriverId(uint32_t *driverId)
 
 	if (fullName == NULL) { return 0; };
 
-	driverHeader = new zui::headerS;
+	driverHeader = new zui::sHeader;
 	if (driverHeader == NULL) { return 0; };
 
 	driverHeaderIndex = fopen(fullName, "r+");
@@ -661,11 +661,11 @@ int main(int argc, char **argv)
 			"\tdriver header record %zi.\n"
 			"\tregion record %zi.\n"
 			"\tmessage record %zi.\n",
-			sizeof(struct zui::headerS),
-			sizeof(struct zui::device::headerS),
-			sizeof(struct zui::driver::headerS),
-			sizeof(struct zui::driver::regionS),
-			sizeof(struct zui::driver::messageS));
+			sizeof(struct zui::sHeader),
+			sizeof(struct zui::device::sHeader),
+			sizeof(struct zui::driver::sHeader),
+			sizeof(struct zui::driver::sRegion),
+			sizeof(struct zui::driver::sMessage));
 
 		exit(EXIT_SUCCESS);
 	};

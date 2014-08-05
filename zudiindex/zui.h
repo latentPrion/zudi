@@ -20,7 +20,7 @@
 
 namespace zui
 {
-	struct headerS
+	struct sHeader
 	{
 		// Version of the record format used in this index file.
 		// "endianness" is a NULL-terminated string of either "le" or "be".
@@ -33,7 +33,7 @@ namespace zui
 
 	namespace device
 	{
-		struct headerS
+		struct sHeader
 		{
 			uint32_t	driverId;
 			uint16_t	index;
@@ -42,13 +42,13 @@ namespace zui
 			uint32_t	dataOff;
 		};
 
-		struct attrDataS
+		struct sAttrData
 		{
 			uint8_t		attr_type, attr_length;
 			uint32_t	attr_nameOff, attr_valueOff;
 		};
 
-		struct _attrDataS
+		struct _sAttrData
 		:
 		public udi_instance_attr_list_t
 		{
@@ -58,7 +58,7 @@ namespace zui
 		};
 
 		#define ZUI_DEVICE_MAX_NATTRS		(20)
-		struct _deviceS
+		struct _sDevice
 		{
 #if !__IS_KERNEL_SOURCE__
 			int  writeOut(
@@ -66,8 +66,8 @@ namespace zui
 				FILE *strings);
 #endif
 
-			struct headerS		h;
-			struct _attrDataS	d[ZUI_DEVICE_MAX_NATTRS];
+			struct sHeader		h;
+			struct _sAttrData	d[ZUI_DEVICE_MAX_NATTRS];
 		};
 	}
 
@@ -78,7 +78,7 @@ namespace zui
 	{
 		enum typeE	{ DRIVERTYPE_DRIVER, DRIVERTYPE_METALANGUAGE };
 
-		struct headerS
+		struct sHeader
 		{
 			// TODO: Add support for custom attributes.
 			uint32_t	id, type;
@@ -122,13 +122,13 @@ namespace zui
 		#define ZUI_DRIVER_REQUIREMENT_MAXLEN		\
 					(ZUI_DRIVER_METALANGUAGE_MAXLEN)
 
-		struct requirementS
+		struct sRequirement
 		{
 			uint32_t	version;
 			uint32_t	nameOff;
 		};
 
-		struct _requirementS
+		struct _sRequirement
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -138,13 +138,13 @@ namespace zui
 			char		name[ZUI_DRIVER_REQUIREMENT_MAXLEN];
 		};
 
-		struct metalanguageS
+		struct sMetalanguage
 		{
 			uint16_t	index;
 			uint32_t	nameOff;
 		};
 
-		struct _metalanguageS
+		struct _sMetalanguage
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -154,30 +154,30 @@ namespace zui
 			char		name[ZUI_DRIVER_METALANGUAGE_MAXLEN];
 		};
 
-		struct childBopS
+		struct sChildBop
 		{
 			uint16_t	metaIndex, regionIndex, opsIndex;
 		};
 
-		struct parentBopS
+		struct sParentBop
 		{
 			uint16_t	metaIndex, regionIndex, opsIndex,
 					bindCbIndex;
 		};
 
-		struct internalBopS
+		struct sInternalBop
 		{
 			uint16_t	metaIndex, regionIndex,
 					opsIndex0, opsIndex1, bindCbIndex;
 		};
 
-		struct moduleS
+		struct sModule
 		{
 			uint16_t	index;
 			uint32_t	fileNameOff;
 		};
 
-		struct _moduleS
+		struct _sModule
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -198,7 +198,7 @@ namespace zui
 		#define	ZUI_REGION_FLAGS_FP		(1<<0)
 		#define	ZUI_REGION_FLAGS_DYNAMIC	(1<<1)
 		#define	ZUI_REGION_FLAGS_INTERRUPT	(1<<2)
-		struct regionS
+		struct sRegion
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -211,14 +211,14 @@ namespace zui
 			uint32_t	flags;
 		};
 
-		struct messageS
+		struct sMessage
 		{
 			uint32_t	driverId;
 			uint16_t	index;
 			uint32_t	messageOff;
 		};
 
-		struct _messageS
+		struct _sMessage
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -229,14 +229,14 @@ namespace zui
 			char		message[ZUI_MESSAGE_MAXLEN];
 		};
 
-		struct disasterMessageS
+		struct sDisasterMessage
 		{
 			uint32_t	driverId;
 			uint16_t	index;
 			uint32_t	messageOff;
 		};
 
-		struct _disasterMessageS
+		struct _sDisasterMessage
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -247,14 +247,14 @@ namespace zui
 			char		message[ZUI_MESSAGE_MAXLEN];
 		};
 
-		struct messageFileS
+		struct sMessageFile
 		{
 			uint32_t	driverId;
 			uint16_t	index;
 			uint32_t	fileNameOff;
 		};
 
-		struct _messageFileS
+		struct _sMessageFile
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -265,13 +265,13 @@ namespace zui
 			char		fileName[ZUI_FILENAME_MAXLEN];
 		};
 
-		struct readableFileS
+		struct sReadableFile
 		{
 			uint16_t	driverId, index;
 			uint32_t	fileNameOff;
 		};
 
-		struct _readableFileS
+		struct _sReadableFile
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -281,7 +281,7 @@ namespace zui
 			char		fileName[ZUI_FILENAME_MAXLEN];
 		};
 
-		struct provisionS
+		struct sProvision
 		{
 			uint32_t	driverId;
 			uint32_t	version;
@@ -289,7 +289,7 @@ namespace zui
 		};
 
 		#define ZUI_PROVISION_NAME_MAXLEN	(ZUI_DRIVER_METALANGUAGE_MAXLEN)
-		struct _provisionS
+		struct _sProvision
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -300,25 +300,25 @@ namespace zui
 			char		name[ZUI_PROVISION_NAME_MAXLEN];
 		};
 
-		struct driverS
+		struct sDriver
 		{
-			struct zui::driver::headerS	h;
-			struct _requirementS		requirements[
+			struct zui::driver::sHeader	h;
+			struct _sRequirement		requirements[
 				ZUI_DRIVER_MAX_NREQUIREMENTS];
 
-			struct _metalanguageS		metalanguages[
+			struct _sMetalanguage		metalanguages[
 				ZUI_DRIVER_MAX_NMETALANGUAGES];
 
-			struct childBopS		childBops[
+			struct sChildBop		childBops[
 				ZUI_DRIVER_MAX_NCHILD_BOPS];
 
-			struct parentBopS		parentBops[
+			struct sParentBop		parentBops[
 				ZUI_DRIVER_MAX_NPARENT_BOPS];
 
-			struct internalBopS		internalBops[
+			struct sInternalBop		internalBops[
 				ZUI_DRIVER_MAX_NINTERNAL_BOPS];
 
-			struct _moduleS			modules[
+			struct _sModule			modules[
 				ZUI_DRIVER_MAX_NMODULES];
 		};
 	}
@@ -326,19 +326,19 @@ namespace zui
 	namespace rank
 	{
 		#define ZUI_RANK_MAX_NATTRS		(ZUI_DEVICE_MAX_NATTRS)
-		struct headerS
+		struct sHeader
 		{
 			uint32_t	driverId;
 			uint8_t		nAttributes, rank;
 			uint32_t	dataOff;
 		};
 
-		struct rankAttrS
+		struct sRankAttr
 		{
 			uint32_t	nameOff;
 		};
 
-		struct _rankAttrS
+		struct _sRankAttr
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *dataF, FILE *stringF);
@@ -347,14 +347,14 @@ namespace zui
 			char		name[UDI_MAX_ATTR_NAMELEN];
 		};
 
-		struct _rankS
+		struct _sRank
 		{
 #if !__IS_KERNEL_SOURCE__
 			int writeOut(FILE *rankF, FILE *dataF, FILE *stringF);
 #endif
 
-			struct zui::rank::headerS	h;
-			struct zui::rank::_rankAttrS	d[ZUI_RANK_MAX_NATTRS];
+			struct zui::rank::sHeader	h;
+			struct zui::rank::_sRankAttr	d[ZUI_RANK_MAX_NATTRS];
 		};
 	}
 }
