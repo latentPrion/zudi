@@ -419,7 +419,7 @@ void udi_mei_driver_error(
   { \
 	struct op_name##_marshal { \
 		_UDI_ARG_MEMBERS_##argc arg_types \
-	} *mp = (op_name##_marshal *)marshal_space; \
+	} *mp = (struct op_name##_marshal *)marshal_space; \
 	mp = mp; \
 	(*(op_name##_op_t *)op) ( UDI_MCB(gcb, cb_type) _UDI_MP_ARGS_##argc ); \
   }
