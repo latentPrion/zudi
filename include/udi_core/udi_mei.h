@@ -382,14 +382,6 @@ void udi_mei_driver_error(
 		__UDI_VA_ARGLIST(argc, \
 			_UDI_CAT_LIST(argc, list1, list2))
 
-/* Zambesii custom extension for kernel-tree metalanguages.
- **/
-#define ZUDI_MEI_STUBS(op_name, cb_type, argc, args, arg_types, arg_va_list, \
-			meta_ops_num, vec_idx, meta_info) \
-		_UDI_MEI_STUBS(op_name, cb_type, argc, args, arg_types, \
-				arg_va_list, meta_ops_num, vec_idx, \
-				&meta_info)
-
 /*
  * Now here's UDI_MEI_STUBS itself, based on all of the above macros.
  */
