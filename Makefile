@@ -3,16 +3,16 @@ all: zudiindex
 zudiindex: zudiindex/zudiindex zudiindex/zudiindex-addall
 
 zudiindex/zudiindex:
-	cd zudiindex; make
+	cd zudiindex; $(MAKE)
 
 install: all
-	cd zudiindex; make install
+	cd zudiindex; $(MAKE) install
 
 uninstall:
-	cd zudiindex; make uninstall
+	cd zudiindex; $(MAKE) uninstall
 
 clean: fonyphile
-	cd zudiindex; make clean
+	cd zudiindex; $(MAKE) clean
 	rm -f *.o
 
 fonyphile:
