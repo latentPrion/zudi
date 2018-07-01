@@ -1,9 +1,10 @@
 
 #include <limits.h>
-#include <string.h>
+#include <cstring>
 #include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
 #include <sys/stat.h>
 #include "zudipropsc.h"
 
