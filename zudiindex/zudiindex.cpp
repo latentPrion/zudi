@@ -181,9 +181,9 @@ static void parseCommandLine(int argc, char **argv)
 	// basepath is required in ADD and accepted in REMOVE.
 	if (basePath != NULL && strlen(basePath) >= ZUI_DRIVER_BASEPATH_MAXLEN)
 	{
-		printf("This program accepts basepaths with up to %d "
-			"characters.\n",
-			ZUI_DRIVER_BASEPATH_MAXLEN);
+		std::cout <<"This program accepts basepaths with up to "
+			<<ZUI_DRIVER_BASEPATH_MAXLEN
+			<<" characters.\n";
 
 		exit(
 			printAndReturn(
@@ -232,8 +232,8 @@ static int createMode(int argc, char **argv)
 	 **/
 	if (strcmp(inputFileName, "le") && strcmp(inputFileName, "be"))
 	{
-		fprintf(stderr, "Error: CREATE mode requires endianness.\n"
-			"\t-c <le|be>.\n");
+		std::cerr <<"Error: CREATE mode requires endianness.\n"
+			"\t-c <le|be>.\n";
 
 		return EX_BAD_COMMAND_LINE;
 	};
@@ -252,9 +252,8 @@ static int createMode(int argc, char **argv)
 		currFile = fopen(fullName, "w");
 		if (currFile == NULL)
 		{
-			fprintf(stderr, "Error: Failed to create index file "
-				"%s.\n",
-				fullName);
+			std::cerr <<"Error: Failed to create index file "
+				<<fullName <<".\n";
 
 			return EX_FILE_OPEN;
 		};
@@ -270,8 +269,8 @@ static int createMode(int argc, char **argv)
 
 		if (blocksWritten < 1)
 		{
-			fprintf(stderr, "Error: Failed to write index header "
-				"to driver index file.\n");
+			std::cerr <<"Error: Failed to write index header "
+				"to driver index file.\n";
 
 			return EX_FILE_IO;
 		};
@@ -319,35 +318,34 @@ static void printBadLineType(enum parser_lineTypeE lineType, int logicalLineNo)
 {
 	if (lineType == LT_UNKNOWN)
 	{
-		fprintf(
-			stderr,
-			"Line %d: Error: Unknown statement. Aborting.\n",
-			logicalLineNo);
+		std::cerr <<"Line "
+			<<logicalLineNo
+			<<": Error: Unknown statement. Aborting.\n";
 	};
 
 	if (lineType == LT_INVALID)
 	{
-		fprintf(
-			stderr, "Line %d: Error: Invalid arguments to "
-			"statement. Aborting.\n",
-			logicalLineNo);
+		std::cerr <<"Line "
+			<<logicalLineNo
+			<<": Error: Invalid arguments to statement. Aborting.\n";
 	};
 
 	if (lineType == LT_OVERFLOW)
 	{
-		fprintf(
-			stderr, "Line %d: Error: an argument overflows either "
+		std::cerr <<"Line "
+			<<logicalLineNo
+			<<": Error: an argument overflows either "
 			"a UDI imposed limit, or a limit imposed by this "
-			"program.\n",
-			logicalLineNo);
+			"program.\n";
 	};
 
 	if (lineType == LT_LIMIT_EXCEEDED)
 	{
-		fprintf(stderr, "Line %d: Error: The number of statements of "
+		std::cerr <<"Line "
+			<<logicalLineNo
+			<<": Error: The number of statements of "
 			"this type exceeds the capability of this program to "
-			"process. This is not a UDI-defined limit.\n",
-			logicalLineNo);
+			"process. This is not a UDI-defined limit.\n";
 	};
 }
 
@@ -358,18 +356,19 @@ static void verboseModePrint(
 {
 	if (lineType == LT_MISC)
 	{
-		printf("Line %03d(%s): \"%s\".\n",
-			logicalLineNo,
-			lineTypeStrings[lineType],
-			rawLineString);
+		std::cout <<"Line "
+			<<std::setfill('0') << std::setw(3) << logicalLineNo
+			<<"(" <<lineTypeStrings[lineType] <<"): "
+			<<"\"" <<rawLineString <<"\".\n";
 
 		return;
 	};
 
 	if (!isBadLineType(lineType))
 	{
-		printf("Line %03d: %s.\n",
-			logicalLineNo, verboseString);
+		std::cout <<"Line "
+			<<std::setfill('0') <<std::setw(3) <<logicalLineNo <<": "
+			<<verboseString <<".\n";
 	};
 
 }
@@ -492,8 +491,8 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 	if (fread(header, sizeof(*header), 1, dhFile) < 1)
 	{
-		fprintf(stderr, "Error: Failed to read index header for "
-			"nRecords update.\n");
+		std::cerr <<"Error: Failed to read index header for "
+			"nRecords update.\n";
 
 		return EX_FILE_IO;
 	};
@@ -507,8 +506,8 @@ int incrementNRecords(uint32_t nSupportedDevices, uint32_t nSupportedMetas)
 
 	if (fwrite(header, sizeof(*header), 1, dhFile) < 1)
 	{
-		fprintf(stderr, "Error: Failed to rewrite index header after "
-			"nRecords update.\n");
+		std::cerr <<"Error: Failed to rewrite index header after "
+			"nRecords update.\n";
 
 		return EX_FILE_IO;
 	};
@@ -534,7 +533,7 @@ static int getNextDriverId(uint32_t *driverId)
 	driverHeaderIndex = fopen(fullName, "r+");
 	if (driverHeaderIndex == NULL)
 	{
-		fprintf(stderr, "Error: Failed to open driver-header index.\n");
+		std::cerr <<"Error: Failed to open driver-header index.\n";
 		return 0;
 	};
 
@@ -542,7 +541,7 @@ static int getNextDriverId(uint32_t *driverId)
 		< 1)
 	{
 		fclose(driverHeaderIndex);
-		fprintf(stderr, "Error: Failed to read index header.\n");
+		std::cerr <<"Error: Failed to read index header.\n";
 		return 0;
 	};
 
@@ -555,7 +554,7 @@ static int getNextDriverId(uint32_t *driverId)
 		< 1)
 	{
 		fclose(driverHeaderIndex);
-		fprintf(stderr, "Error: Failed to rewrite index header.\n");
+		std::cerr <<"Error: Failed to rewrite index header.\n";
 		return 0;
 	};
 
@@ -656,17 +655,17 @@ int main(int argc, char **argv)
 	parseCommandLine(argc, argv);
 	if (programMode == MODE_PRINT_SIZES)
 	{
-		printf("Sizes of the types:\n"
-			"\tindex header %zi.\n"
-			"\tdevice header record %zi.\n"
-			"\tdriver header record %zi.\n"
-			"\tregion record %zi.\n"
-			"\tmessage record %zi.\n",
-			sizeof(struct zui::sHeader),
-			sizeof(struct zui::device::sHeader),
-			sizeof(struct zui::driver::sHeader),
-			sizeof(struct zui::driver::sRegion),
-			sizeof(struct zui::driver::sMessage));
+		std::cout <<"Sizes of the types:\n"
+			"\tindex header "
+			<<sizeof(struct zui::sHeader) <<".\n"
+			"\tdevice header record "
+			<<sizeof(struct zui::device::sHeader) <<".\n"
+			"\tdriver header record "
+			<<sizeof(struct zui::driver::sHeader) <<".\n"
+			"\tregion record "
+			<<sizeof(struct zui::driver::sRegion) <<".\n"
+			"\tmessage record "
+			<<sizeof(struct zui::driver::sMessage) <<".\n";
 
 		exit(EXIT_SUCCESS);
 	};
@@ -723,9 +722,8 @@ int main(int argc, char **argv)
 	{
 		if (!ignoreInvalidBasePath && !folderExists(basePath))
 		{
-			fprintf(stderr, "%s: Warning: Base path \"%s\" does "
-				"not exist or is not a folder.\n",
-				argv[0], basePath);
+			std::cerr <<argv[0] <<": Warning: Base path \"" <<basePath <<"\" does "
+				"not exist or is not a folder.\n";
 		};
 
 		exit(addMode(argc, argv));
