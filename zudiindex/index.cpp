@@ -293,7 +293,6 @@ int index_writeDevices(uint32_t *offset)
 	char				*deviceFFullName=NULL,
 					*stringFFullName=NULL,
 					*dataFFullName=NULL;
-	int				i;
 
 	deviceFFullName = makeFullName(
 		deviceFFullName, indexPath, "devices.zudi-index");
@@ -402,7 +401,6 @@ static int index_writeRanks(uint32_t *fileOffset)
 	char				*rankFFullName=NULL,
 					*dataFFullName=NULL,
 					*stringFFullName=NULL;
-	int				i;
 
 	rankFFullName = makeFullName(
 		rankFFullName, indexPath, "ranks.zudi-index");
@@ -458,6 +456,7 @@ static int index_writeListToDisk(
 	listElementS *list, T *type, const char *listName, uint32_t *offset
 	)
 {
+	(void)type;
 	char		*dataFFullName=NULL, *stringFFullName=NULL;
 	FILE		*dataF, *stringF;
 	listElementS	*tmp;
@@ -848,6 +847,7 @@ int zui::driver::_sProvision::writeOut(FILE *provF, FILE *stringF)
 
 int zui::driver::sRegion::writeOut(FILE *dataF, FILE *stringF)
 {
+	(void)stringF;
 	if (fwrite(this, sizeof(*this), 1, dataF) < 1)
 	{
 		fprintf(stderr, "Failed to write out region.\n");
