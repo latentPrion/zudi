@@ -1063,7 +1063,7 @@ static void *parseRank(const char *line)
 	{
 		if (ret->h.nAttributes >= ZUI_RANK_MAX_NATTRS)
 		{
-			fprintf(stderr, limitExceededMessage);
+			fprintf(stderr, "%s.\n", limitExceededMessage);
 			goto releaseAndExit;
 		};
 
