@@ -1,7 +1,14 @@
-.PHONY=fonyphile
-CFLAGS=-O3 -Wall -Wextra -pedantic -std=c99
-LDFLAGS=-lstdc++
-CPPFLAGS=-I../include
+.PHONY: fonyphile clean
+
+CPPFLAGS:=-I../include
+CFLAGS:=-O3 -Wall -Wextra -pedantic -std=c99
+CXXFLAGS:=-O3 -Wall -Wextra -pedantic -std=c++03
+LINK.o=${LINK.cc}
+
+ifeq (${INSTALL_PREFIX},)
+INSTALL_PREFIX:=/usr/bin
+endif
+
 all: zudiindex zudiindex-addall
 
 zudiindex: parse.o index.o
@@ -10,11 +17,11 @@ parse.o: zudipropsc.h zui.h
 index.o: zudipropsc.h zui.h
 
 install: all
-	install zudiindex zudiindex-addall /usr/bin
-	chmod +x /usr/bin/zudiindex /usr/bin/zudiindex-addall
+	install zudiindex zudiindex-addall ${INSTALL_PREFIX}
+	chmod +x ${INSTALL_PREFIX}/zudiindex ${INSTALL_PREFIX}/zudiindex-addall
 
 uninstall:
-	rm -f /usr/bin/zudiindex /usr/bin/zudiindex-addall
+	rm -f ${INSTALL_PREFIX}/zudiindex ${INSTALL_PREFIX}/zudiindex-addall
 
 clean: fonyphile
 	rm -f *.o zudiindex
