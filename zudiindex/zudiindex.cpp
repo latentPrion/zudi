@@ -253,7 +253,7 @@ static int createMode(int argc, char **argv)
 		if (currFile == NULL)
 		{
 			std::cerr <<"Error: Failed to create index file "
-				<<fullName <<".\n";
+				<<fullName <<" .\n";
 
 			return EX_FILE_OPEN;
 		};
@@ -722,7 +722,7 @@ int main(int argc, char **argv)
 	{
 		if (!ignoreInvalidBasePath && !folderExists(basePath))
 		{
-			std::cerr <<argv[0] <<": Warning: Base path \"" <<basePath <<"\" does "
+			std::cerr <<argv[0] <<"Warning: Base path \"" <<basePath <<"\" does "
 				"not exist or is not a folder.\n";
 		};
 
