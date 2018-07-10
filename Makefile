@@ -3,7 +3,7 @@ all: zudiindex
 zudiindex: zudiindex/zudiindex zudiindex/zudiindex-addall
 
 zudiindex/zudiindex:
-	cd zudiindex; $(MAKE)
+	cd zudiindex; INSTALL_PREFIX=${INSTALL_PREFIX} $(MAKE)
 
 install: all
 	cd zudiindex; $(MAKE) install
