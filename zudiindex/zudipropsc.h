@@ -3,7 +3,7 @@
 
 	#include <stdio.h>
 	#include <stdlib.h>
-	#include "zui.h"
+	#include <zui.h>
 
 enum parseModeE { PARSE_NONE, PARSE_TEXT, PARSE_BINARY };
 enum programModeE {
