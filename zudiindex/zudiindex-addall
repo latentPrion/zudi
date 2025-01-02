@@ -2,10 +2,15 @@
 
 set -e
 
+zudiindex_bin="zudiindex"
 wildcard=""
 propsDir="."
 indexDir=""
 usageMessage="`echo \"$0 -<drivers|metas> [search-directory] [index-path]\"`"
+
+if [ -n "${ZUDIINDEX_BIN}" ]; then
+	zudiindex_bin=${ZUDIINDEX_BIN}
+fi
 
 case "$1" in
 	"-drivers") wildcard='*.udidprops';;
@@ -31,15 +36,15 @@ if [ "$1" = "-drivers" ]
 then
 	for i in $files; do
 		if [ -n "$indexDir" ]
-		then zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath -i "$indexDir"
-		else zudiindex -a "$i" -txt -b drivers --ignore-invalid-basepath
+		then ${zudiindex_bin} -a "$i" -txt -b drivers --ignore-invalid-basepath -i "$indexDir"
+		else ${zudiindex_bin} -a "$i" -txt -b drivers --ignore-invalid-basepath
 		fi
 	done
 else
 	for i in $files; do
 		if [ -n "$indexDir" ]
-		then zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i "$indexDir"
-		else zudiindex -a "$i" -txt -meta -b metas --ignore-invalid-basepath
+		then ${zudiindex_bin} -a "$i" -txt -meta -b metas --ignore-invalid-basepath -i "$indexDir"
+		else ${zudiindex_bin} -a "$i" -txt -meta -b metas --ignore-invalid-basepath
 		fi
 	done
 fi
