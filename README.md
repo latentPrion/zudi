@@ -1,10 +1,10 @@
 # Alert: Obsolete repository:
 
 [!WARNING]
-!!! warning This project is no longer its own standalone git repository.
-!!! It has been wholly absorbed into the zambesii kernel git
-!!! repository and currently lives in the programs/ subdirectory
-!!! of the Zambesii kernel source tree.
+This project is no longer its own standalone git repository.
+It has been wholly absorbed into the zambesii kernel git
+repository and currently lives in the programs/ subdirectory
+of the Zambesii kernel source tree.
 
 # Legacy README content follows below here:
 
